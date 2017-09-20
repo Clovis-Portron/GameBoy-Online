@@ -1,4 +1,14 @@
-var GBPlugin = (function () {
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var GBPlugin = /** @class */ (function () {
     function GBPlugin() {
         this.counter = 0;
         this.counterInterval = 30;
@@ -16,8 +26,8 @@ var GBPlugin = (function () {
             return;
     };
     return GBPlugin;
-})();
-var GBPluginScheduler = (function () {
+}());
+var GBPluginScheduler = /** @class */ (function () {
     function GBPluginScheduler() {
         this.pluginsRun = [];
         this.pluginsStart = [];
@@ -46,58 +56,113 @@ var GBPluginScheduler = (function () {
     };
     GBPluginScheduler.Instance = new GBPluginScheduler();
     return GBPluginScheduler;
-})();
+}());
 // Exportation
 window.GBPluginScheduler = GBPluginScheduler;
 /// <reference path="GBPluginScheduler.ts" />
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
-var NPC = (function () {
+var NPC = /** @class */ (function () {
     function NPC() {
-        this.u = 0x3C;
-        this.script = 0x00;
-        this.sprite = 0x60;
-        this.initBehavior = 0x03;
-        this.uu = 0x00;
-        this.uuu = 0x00;
-        this.color = 0x01;
-        this.uuuu = 0x00;
-        this.frame = 0x0C;
-        this.behavior = 0x03;
-        this.animationCounter = 0x00;
-        this.uuuuu = 0x00;
-        this.uuuuuu = 0x00;
-        this.uuuuuuu = 0x00;
-        this.uuuuuuuu = 0x00;
-        this.uuuuuuuuu = 0x00;
-        this.boundsXstart = 0x0A;
-        this.boundsYstart = 0x0A;
-        this.boundsXend = 0x0A;
-        this.boundsYend = 0x0A;
-        this.boundsxuuu = 0x0A;
-        this.boundsyuuu = 0x0A;
-        this.uuuuuuuuuuu = 0x00;
-        this.spriteX = 0x0A;
-        this.spriteY = 0x0A;
+        this.OBJECT_SPRITE = 0x3C;
+        this.OBJECT_MAP_OBJECT_INDEX = 0x00;
+        this.OBJECT_SPRITE_TILE = 0x60;
+        this.OBJECT_MOVEMENTTYPE = 0x03; //0: regard direction, 1 : rien, 2 : marche libre ,3: turn, 4: Marche aléatoire verticale, 5: marcher r4 H, 6: retour position originale
+        this.OBJECT_FLAGS1 = 0x00;
+        this.OBJECT_FLAGS2 = 0x00;
+        this.OBJECT_PALETTE = 0x01;
+        this.OBJECT_DIRECTION_WALKING = 0x00; // 1: haut, 2: bas,3: droite
+        this.OBJECT_FACING = 0x00; //0: bas, 8: gauche , 0x0C: droite, 4: haut
+        this.OBJECT_STEP_TYPE = 0x03; // 3: wait, 1: turn, 7: walk
+        this.OBJECT_STEP_DURATION = 0x00;
+        this.OBJECT_ACTION = 0x00; //1: rien, 2: walk, 3: run, 4: turn
+        this.OBJECT_STEP_FRAME = 0x00;
+        this.OBJECT_FACING_STEP = 0x00;
+        this.OBJECT_NEXT_TILE = 0x00;
+        this.OBJECT_STANDING_TILE = 0x00;
+        this.OBJECT_NEXT_MAP_X = 0x0A;
+        this.OBJECT_NEXT_MAP_Y = 0x0A;
+        this.OBJECT_MAP_X = 0x0A;
+        this.OBJECT_MAP_Y = 0x0A;
+        this.OBJECT_INIT_X = 0x0A;
+        this.OBJECT_INIT_Y = 0x0A;
+        this.OBJECT_RADIUS = 0x00;
+        this.OBJECT_SPRITE_X = 0x0A;
+        this.OBJECT_SPRITE_Y = 0x0A;
+        this.OBJECT_SPRITE_X_OFFSET = 0;
+        this.OBJECT_SPRITE_Y_OFFSET = 0;
+        this.OBJECT_MOVEMENT_BYTE_INDEX = 0;
+        this.u1 = 0;
+        this.u2 = 0;
+        this.u3 = 0;
+        this.u4 = 0;
+        this.OBJECT_RANGE = 0;
     }
     return NPC;
-})();
-var GBPluginNPCInjector = (function (_super) {
+}());
+var NPCWatcher = /** @class */ (function () {
+    function NPCWatcher(emulator, slot, npc) {
+        this.mustUpdate = false;
+        this.valuesToUpdate = [];
+        this.created = false;
+        this.npc = npc;
+        this.slot = slot;
+        this.emulator = emulator;
+        this.mustUpdate = true;
+        for (var i = 0; i < Object.keys(this.npc).length; i++) {
+            this.valuesToUpdate[Object.keys(this.npc)[i]] = true;
+        }
+    }
+    NPCWatcher.prototype.set = function (property, value) {
+        this.npc[property] = value;
+        this.valuesToUpdate[property] = true;
+        this.mustUpdate = true;
+    };
+    NPCWatcher.prototype.update = function () {
+        if (this.emulator.memoryRead(this.slot) == 0 && this.created == true) {
+            // Il a été supprimé, on le réalloue
+            return false;
+        }
+        if (this.created == false)
+            this.created = true;
+        if (this.mustUpdate == false)
+            return true;
+        var cell = this.slot;
+        for (var i = 0; i < Object.keys(this.npc).length; i++) {
+            /*if(this.valuesToUpdate[Object.keys(this.npc)[i]] == true)
+            {
+                this.emulator.memoryWrite(cell, this.npc[Object.keys(this.npc)[i]]);
+                this.valuesToUpdate[Object.keys(this.npc)[i]] = false;
+            }
+            else
+                this.npc[Object.keys(this.npc)[i]] = this.emulator.memoryRead(cell);*/
+            this.emulator.memoryWrite(cell, this.npc[Object.keys(this.npc)[i]]);
+            cell = cell + 0x01;
+        }
+        this.mustUpdate = false;
+        return true;
+    };
+    return NPCWatcher;
+}());
+var GBPluginNPCInjector = /** @class */ (function (_super) {
     __extends(GBPluginNPCInjector, _super);
     function GBPluginNPCInjector() {
-        _super.call(this);
-        this.npcsToAdd = [];
-        this.npcsAdded = [];
+        var _this = _super.call(this) || this;
+        _this.npcsToAdd = [];
+        _this.npcsAdded = [];
+        return _this;
     }
     GBPluginNPCInjector.prototype.run = function (emulator) {
         if (this.canRun() == false)
             return;
+        for (var i = 0; i < this.npcsAdded.length;) {
+            if (this.npcsAdded[i].update() == false) {
+                //this.npcsToAdd.push(this.npcsAdded[i].npc);
+                this.npcsAdded.splice(i, 1);
+            }
+            else
+                i++;
+        }
         if (this.npcsToAdd.length <= 0)
             return;
-        console.log("try to addnpc");
         var freeSlot = this.searchFreeNPCSlot(emulator);
         if (freeSlot == null)
             return;
@@ -117,20 +182,13 @@ var GBPluginNPCInjector = (function (_super) {
             return null;
     };
     GBPluginNPCInjector.prototype.addNPC = function (emulator, slot, npc) {
-        var raw = [];
-        for (var i = 0; i < Object.keys(npc).length; i++) {
-            raw.push(npc[Object.keys(npc)[i]]);
-        }
-        console.log(raw);
-        for (var i = 0; i < raw.length; i++) {
-            emulator.memoryWrite(slot, raw[i]);
-            slot = slot + 0x01;
-        }
-        this.npcsAdded.push(npc);
+        var p = new NPCWatcher(emulator, slot, npc);
+        p.update();
+        this.npcsAdded.push(p);
     };
     GBPluginNPCInjector.NPCBLOCKSTART = 0xD4D6;
     return GBPluginNPCInjector;
-})(GBPlugin);
+}(GBPlugin));
 // Injection
 var hh = new GBPluginNPCInjector();
 window.GBPluginScheduler.GetInstance().registerPluginRun(hh);
@@ -141,11 +199,12 @@ window.injectNPC = function (npc) {
 };
 /// <reference path="GBPluginScheduler.ts" />
 /// <reference path="GBPluginNPCInjector.ts" />
-var GBPluginNPCInfo = (function (_super) {
+var GBPluginNPCInfo = /** @class */ (function (_super) {
     __extends(GBPluginNPCInfo, _super);
     function GBPluginNPCInfo() {
-        _super.apply(this, arguments);
-        this.npcs = [];
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.npcs = [];
+        return _this;
     }
     GBPluginNPCInfo.prototype.run = function (emulator) {
         if (this.canRun() == false)
@@ -176,7 +235,7 @@ var GBPluginNPCInfo = (function (_super) {
     };
     GBPluginNPCInfo.NPCBLOCKSTART = 0xD4D6;
     return GBPluginNPCInfo;
-})(GBPlugin);
+}(GBPlugin));
 var hhh = new GBPluginNPCInfo();
 window.GBPluginScheduler.GetInstance().registerPluginRun(hhh);
 window.dumpNPC = function () {
