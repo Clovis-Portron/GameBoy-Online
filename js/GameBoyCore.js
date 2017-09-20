@@ -5720,6 +5720,7 @@ GameBoyCore.prototype.run = function () {
 				this.audioUnderrunAdjustment();
 				this.clockUpdate();			//RTC clocking.
 				if (!this.halt) {
+					window.GBPluginScheduler.GetInstance().run();
 					this.executeIteration();
 				}
 				else {						//Finish the HALT rundown execution.

@@ -2,7 +2,7 @@
   "compileOnSave": true,
   "compilerOptions": {
     "module":"system",
-    "target": "es6",
+    "target": "es5",
     "sourceMap": true,
     "outFile": "./../js/plugins.js",
     "watch": false
