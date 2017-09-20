@@ -1,0 +1,22 @@
+{
+  "name": "pokecrystal",
+  "version": "1.0.0",
+  "description": "JavaScript GameBoy Color Emulator =================================",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "build": "tsc --project TS"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Clovis-Portron/GameBoy-Online.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Clovis-Portron/GameBoy-Online/issues"
+  },
+  "homepage": "https://github.com/Clovis-Portron/GameBoy-Online#readme"
+}

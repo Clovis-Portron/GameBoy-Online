@@ -1,0 +1,10 @@
+{
+  "compileOnSave": true,
+  "compilerOptions": {
+    "module":"system",
+    "target": "es6",
+    "sourceMap": true,
+    "outFile": "./../js/plugins.js",
+    "watch": false
+  }
+}
