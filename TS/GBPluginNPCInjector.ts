@@ -99,3 +99,8 @@ class GBPluginNPCInjector extends GBPlugin
 let hh = new GBPluginNPCInjector();
 (<any>window).GBPluginScheduler.GetInstance().registerPluginRun(hh);
 (<any>window).NPC = NPC;
+(<any>window).INPC = new NPC();
+(<any>window).injectNPC = function(npc)
+{
+    hh.registerNPC(npc);
+}

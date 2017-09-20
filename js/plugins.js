@@ -135,6 +135,10 @@ var GBPluginNPCInjector = (function (_super) {
 var hh = new GBPluginNPCInjector();
 window.GBPluginScheduler.GetInstance().registerPluginRun(hh);
 window.NPC = NPC;
+window.INPC = new NPC();
+window.injectNPC = function (npc) {
+    hh.registerNPC(npc);
+};
 /// <reference path="GBPluginScheduler.ts" />
 /// <reference path="GBPluginNPCInjector.ts" />
 var GBPluginNPCInfo = (function (_super) {
@@ -146,7 +150,7 @@ var GBPluginNPCInfo = (function (_super) {
     GBPluginNPCInfo.prototype.run = function (emulator) {
         if (this.canRun() == false)
             return;
-        console.log("NPC INFO");
+        //console.log("NPC INFO");
         this.npcs = this.searchNPCS(emulator);
     };
     GBPluginNPCInfo.prototype.searchNPCS = function (emulator) {
@@ -167,7 +171,7 @@ var GBPluginNPCInfo = (function (_super) {
             raw.push(emulator.memoryRead(slot));
             slot = slot + 0x01;
         }
-        console.log(raw);
+        //console.log(raw);
         return npc;
     };
     GBPluginNPCInfo.NPCBLOCKSTART = 0xD4D6;

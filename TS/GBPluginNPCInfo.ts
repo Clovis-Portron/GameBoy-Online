@@ -12,7 +12,7 @@ class GBPluginNPCInfo extends GBPlugin
     {
         if(this.canRun() == false)
             return;
-        console.log("NPC INFO");
+        //console.log("NPC INFO");
         this.npcs = this.searchNPCS(emulator);
     }
 
@@ -39,7 +39,7 @@ class GBPluginNPCInfo extends GBPlugin
             raw.push(emulator.memoryRead(slot));
             slot = slot + 0x01;
         }
-        console.log(raw);
+        //console.log(raw);
         return npc;
     }
 
