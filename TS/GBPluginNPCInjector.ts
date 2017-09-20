@@ -1,6 +1,6 @@
 /// <reference path="GBPluginScheduler.ts" />
 
-abstract class NPC 
+class NPC 
 {
      u  : number  = 0x3C;
      script  : number  = 0x00;
@@ -17,13 +17,14 @@ abstract class NPC
      uuuuuu  : number  = 0x00;
      uuuuuuu  : number  = 0x00;
      uuuuuuuu  : number  = 0x00;
+     uuuuuuuuu  : number  = 0x00;     
      boundsXstart  : number  = 0x0A;
      boundsYstart  : number  = 0x0A;
      boundsXend  : number  = 0x0A;
      boundsYend  : number  = 0x0A;
      boundsxuuu  : number  = 0x0A;
      boundsyuuu  : number  = 0x0A;
-    uuuuuuuuuu  : number  = 0x00;
+     uuuuuuuuuuu  : number  = 0x00;
      spriteX  : number  = 0x0A;
      spriteY  : number  = 0x0A;
 }
@@ -49,11 +50,17 @@ class GBPluginNPCInjector extends GBPlugin
         
         if(this.npcsToAdd.length <= 0)
             return;
+        console.log("try to addnpc");
         let freeSlot = this.searchFreeNPCSlot(emulator);
         if(freeSlot == null)
             return;
         this.addNPC(emulator, freeSlot, this.npcsToAdd.shift());
         
+    }
+
+    public registerNPC(npc : NPC)
+    {
+        this.npcsToAdd.push(npc);
     }
 
     private searchFreeNPCSlot(emulator : any) : number 
@@ -89,4 +96,6 @@ class GBPluginNPCInjector extends GBPlugin
 }
 
 // Injection
-(<any>window).GBPluginScheduler.GetInstance().registerPluginRun(new GBPluginNPCInjector());
+let hh = new GBPluginNPCInjector();
+(<any>window).GBPluginScheduler.GetInstance().registerPluginRun(hh);
+(<any>window).NPC = NPC;

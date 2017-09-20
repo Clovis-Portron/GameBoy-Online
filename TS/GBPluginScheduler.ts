@@ -20,7 +20,7 @@ class GBPluginScheduler
     {
 
         this.pluginsRun.forEach(function(plugin){ 
-            console.log("Running "+(<any>plugin.constructor).name);
+            //console.log("Running "+(<any>plugin.constructor).name);
             plugin.run(emulator);
         });
     }

@@ -27,7 +27,7 @@ var GBPluginScheduler = (function () {
     };
     GBPluginScheduler.prototype.run = function (emulator) {
         this.pluginsRun.forEach(function (plugin) {
-            console.log("Running " + plugin.constructor.name);
+            //console.log("Running "+(<any>plugin.constructor).name);
             plugin.run(emulator);
         });
     };
@@ -72,13 +72,14 @@ var NPC = (function () {
         this.uuuuuu = 0x00;
         this.uuuuuuu = 0x00;
         this.uuuuuuuu = 0x00;
+        this.uuuuuuuuu = 0x00;
         this.boundsXstart = 0x0A;
         this.boundsYstart = 0x0A;
         this.boundsXend = 0x0A;
         this.boundsYend = 0x0A;
         this.boundsxuuu = 0x0A;
         this.boundsyuuu = 0x0A;
-        this.uuuuuuuuuu = 0x00;
+        this.uuuuuuuuuuu = 0x00;
         this.spriteX = 0x0A;
         this.spriteY = 0x0A;
     }
@@ -96,10 +97,14 @@ var GBPluginNPCInjector = (function (_super) {
             return;
         if (this.npcsToAdd.length <= 0)
             return;
+        console.log("try to addnpc");
         var freeSlot = this.searchFreeNPCSlot(emulator);
         if (freeSlot == null)
             return;
         this.addNPC(emulator, freeSlot, this.npcsToAdd.shift());
+    };
+    GBPluginNPCInjector.prototype.registerNPC = function (npc) {
+        this.npcsToAdd.push(npc);
     };
     GBPluginNPCInjector.prototype.searchFreeNPCSlot = function (emulator) {
         var current = GBPluginNPCInjector.NPCBLOCKSTART;
@@ -127,5 +132,50 @@ var GBPluginNPCInjector = (function (_super) {
     return GBPluginNPCInjector;
 })(GBPlugin);
 // Injection
-window.GBPluginScheduler.GetInstance().registerPluginRun(new GBPluginNPCInjector());
+var hh = new GBPluginNPCInjector();
+window.GBPluginScheduler.GetInstance().registerPluginRun(hh);
+window.NPC = NPC;
+/// <reference path="GBPluginScheduler.ts" />
+/// <reference path="GBPluginNPCInjector.ts" />
+var GBPluginNPCInfo = (function (_super) {
+    __extends(GBPluginNPCInfo, _super);
+    function GBPluginNPCInfo() {
+        _super.apply(this, arguments);
+        this.npcs = [];
+    }
+    GBPluginNPCInfo.prototype.run = function (emulator) {
+        if (this.canRun() == false)
+            return;
+        console.log("NPC INFO");
+        this.npcs = this.searchNPCS(emulator);
+    };
+    GBPluginNPCInfo.prototype.searchNPCS = function (emulator) {
+        var results = [];
+        var current = GBPluginNPCInfo.NPCBLOCKSTART;
+        while (current < 0xD720) {
+            if (emulator.memoryRead(current) != 0x0)
+                results.push(this.generateNPCFromRAM(emulator, current));
+            current = current + 0x28;
+        }
+        return results;
+    };
+    GBPluginNPCInfo.prototype.generateNPCFromRAM = function (emulator, slot) {
+        var npc = new NPC();
+        var raw = [];
+        for (var i = 0; i < Object.keys(npc).length; i++) {
+            npc[Object.keys(npc)[i]] = emulator.memoryRead(slot);
+            raw.push(emulator.memoryRead(slot));
+            slot = slot + 0x01;
+        }
+        console.log(raw);
+        return npc;
+    };
+    GBPluginNPCInfo.NPCBLOCKSTART = 0xD4D6;
+    return GBPluginNPCInfo;
+})(GBPlugin);
+var hhh = new GBPluginNPCInfo();
+window.GBPluginScheduler.GetInstance().registerPluginRun(hhh);
+window.dumpNPC = function () {
+    return hhh.npcs;
+};
 //# sourceMappingURL=plugins.js.map
