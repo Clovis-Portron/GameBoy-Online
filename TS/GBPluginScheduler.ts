@@ -8,23 +8,40 @@ class GBPluginScheduler
     }
 
 
-    private plugins : Array<GBPlugin>;
-
+    private pluginsRun : Array<GBPlugin>;
+    private pluginsStart : Array<GBPlugin>;
     constructor()
     {
-        this.plugins = [];
+        this.pluginsRun = [];
+        this.pluginsStart = [];
     }
 
-    public run() : void 
+    public run(emulator : any) : void 
     {
-        this.plugins.forEach(function(plugin){ 
-            plugin.run();
+
+        this.pluginsRun.forEach(function(plugin){ 
+            console.log("Running "+(<any>plugin.constructor).name);
+            plugin.run(emulator);
         });
     }
 
-    public registerPlugin(plugin : GBPlugin) : void 
+    public start(emulator : any) : void 
     {
-        this.plugins.push(plugin);
+        console.log("START");
+        this.pluginsStart.forEach(function(plugin){ 
+            console.log("Running "+(<any>plugin.constructor).name);
+            plugin.run(emulator);
+        }); 
+    }
+
+    public registerPluginRun(plugin : GBPlugin) : void 
+    {
+        this.pluginsRun.push(plugin);
+    }
+
+    public registerPluginStart(plugin : GBPlugin) : void 
+    {
+        this.pluginsStart.push(plugin);
     }
 }
 

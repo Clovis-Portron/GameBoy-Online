@@ -14,7 +14,7 @@ abstract class GBPlugin
         return false;
     }
 
-    run() : void
+    run(emulator : any) : void
     {
         if(this.canRun() == false)
             return;

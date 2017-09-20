@@ -4404,6 +4404,7 @@ GameBoyCore.prototype.returnFromRTCState = function () {
 	}
 }
 GameBoyCore.prototype.start = function () {
+	window.GBPluginScheduler.GetInstance().start(this);
 	this.initMemory();	//Write the startup memory.
 	this.ROMLoad();		//Load the ROM into memory and get cartridge information from it.
 	this.initLCD();		//Initialize the graphics.
@@ -5720,7 +5721,7 @@ GameBoyCore.prototype.run = function () {
 				this.audioUnderrunAdjustment();
 				this.clockUpdate();			//RTC clocking.
 				if (!this.halt) {
-					window.GBPluginScheduler.GetInstance().run();
+					window.GBPluginScheduler.GetInstance().run(this);
 					this.executeIteration();
 				}
 				else {						//Finish the HALT rundown execution.
