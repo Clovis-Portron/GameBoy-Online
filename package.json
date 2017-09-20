@@ -18,5 +18,8 @@
   "bugs": {
     "url": "https://github.com/Clovis-Portron/GameBoy-Online/issues"
   },
-  "homepage": "https://github.com/Clovis-Portron/GameBoy-Online#readme"
+  "homepage": "https://github.com/Clovis-Portron/GameBoy-Online#readme",
+  "devDependencies": {
+    "typescript": "^2.5.2"
+  }
 }
