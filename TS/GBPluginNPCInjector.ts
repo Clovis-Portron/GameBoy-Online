@@ -189,7 +189,7 @@ let hh = new GBPluginNPCInjector();
 	//chercher le comportement inoffensif
     hh.npcsAdded[0].set("OBJECT_MAP_OBJECT_INDEX", even);
 }
-
+-
 // 0 Crash
 // 1 Un(e) superbe RETOUR
 // 2 //
