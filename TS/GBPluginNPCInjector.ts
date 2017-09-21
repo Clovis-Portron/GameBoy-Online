@@ -145,8 +145,6 @@ class NPCWatcher
         }
         if(this.created == false)
             this.created = true;
-        if(this.mustUpdate == false)
-            return true;
 		
         let cell = this.slot;        
         for(let i = 0; i < Object.keys(this.npc).length; i++)

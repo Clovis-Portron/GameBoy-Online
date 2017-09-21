@@ -161,6 +161,13 @@ var NPCWatcher = /** @class */ (function () {
             this.valuesToUpdate[Object.keys(this.npc)[i]] = true;
         }
     };
+    NPCWatcher.prototype.free = function () {
+        var cell = this.slot;
+        for (var i = 0; i < Object.keys(this.npc).length; i++) {
+            this.emulator.memoryWrite(cell, 0);
+            cell = cell + 0x01;
+        }
+    };
     NPCWatcher.prototype.update = function () {
         if ((this.emulator.memoryRead(this.slot) == 0 && this.created == true) || this.mustDelete) {
             // Il a été supprimé, on le réalloue
@@ -210,6 +217,7 @@ var GBPluginNPCInjector = /** @class */ (function (_super) {
             if (this.npcsAdded[i].update() == false) {
                 //if(this.npcsAdded[i].mustDelete == false)
                 //this.registerNPC(this.npcsAdded[i].npc);
+                this.npcsAdded[i].free();
                 this.npcsAdded.splice(i, 1);
             }
             else
