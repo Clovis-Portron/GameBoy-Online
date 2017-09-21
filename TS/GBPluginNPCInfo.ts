@@ -8,13 +8,18 @@ class GBPluginNPCInfo extends GBPlugin
 
     public npcs : Array<NPC> = [];
 
+    constructor()
+    {
+        super();
+        (<any>window).GBPluginScheduler.GetInstance().registerPluginRun(this);
+    }
+
     public run(emulator : any) : void 
     {
         if(this.canRun() == false)
             return;
         //console.log("NPC INFO");
         this.npcs = this.searchNPCS(emulator);
-        (<any>window).GBPluginScheduler.GetInstance().registerPluginRun(this);
     }
 
     private searchNPCS(emulator : any) : Array<NPC>
@@ -47,8 +52,4 @@ class GBPluginNPCInfo extends GBPlugin
 
 }
 
-let hhh= new GBPluginNPCInfo();
-(<any>window).dumpNPC = function()
-{
-    return hhh.npcs;
-}
+(<any>window).NPCInfo = new GBPluginNPCInfo();
