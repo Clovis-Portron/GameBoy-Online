@@ -75,7 +75,7 @@ class NPCWatcher
 
     public walk(direction : number)
     {
-        this.set("OBJECT_MOVEMENTTYPE",0x0b);
+        this.set("OBJECT_MOVEMENTTYPE",0x00);
         this.set("OBJECT_STEP_DURATION",16);
         this.set("OBJECT_NEXT_TILE",0);
         this.set("OBJECT_ACTION",2);

@@ -94,6 +94,7 @@ class GBPluginPlayerSender extends GBPlugin
         else 
         {
             clone = (<any>window).NPCInjector.npcsAdded[0].npc;
+            
             // Si trop loin pour marcher, on TP
             if(Math.abs(other.OBJECT_MAP_X - clone.OBJECT_MAP_X) > 2 || Math.abs(other.OBJECT_MAP_Y - clone.OBJECT_MAP_Y) > 2)
             {
@@ -110,6 +111,8 @@ class GBPluginPlayerSender extends GBPlugin
             }
             else 
             {
+                if(clone.OBJECT_DIRECTION_WALKING != 0xFF)
+                    return;
                 if(other.OBJECT_MAP_X > clone.OBJECT_MAP_X)
                 {
                     (<any>window).NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.RIGHT);

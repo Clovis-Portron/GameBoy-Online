@@ -119,7 +119,7 @@ var NPCWatcher = /** @class */ (function () {
         this.mustUpdate = true;
     };
     NPCWatcher.prototype.walk = function (direction) {
-        this.set("OBJECT_MOVEMENTTYPE", 0x0b);
+        this.set("OBJECT_MOVEMENTTYPE", 0x00);
         this.set("OBJECT_STEP_DURATION", 16);
         this.set("OBJECT_NEXT_TILE", 0);
         this.set("OBJECT_ACTION", 2);
@@ -381,6 +381,8 @@ var GBPluginPlayerReceiver = /** @class */ (function (_super) {
                 window.NPCInjector.npcsAdded[0].reset(clone);
             }
             else {
+                if (clone.OBJECT_DIRECTION_WALKING != 0xFF)
+                    return;
                 if (other.OBJECT_MAP_X > clone.OBJECT_MAP_X) {
                     window.NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.RIGHT);
                 }
@@ -497,6 +499,8 @@ var GBPluginPlayerSender = /** @class */ (function (_super) {
                 window.NPCInjector.npcsAdded[0].reset(clone);
             }
             else {
+                if (clone.OBJECT_DIRECTION_WALKING != 0xFF)
+                    return;
                 if (other.OBJECT_MAP_X > clone.OBJECT_MAP_X) {
                     window.NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.RIGHT);
                 }
