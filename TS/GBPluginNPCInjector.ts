@@ -9,7 +9,7 @@ class NPC
     OBJECT_FLAGS1  : number  = 0x00;
     OBJECT_FLAGS2  : number  = 0x00;
     OBJECT_PALETTE  : number  = 0x01;
-    OBJECT_DIRECTION_WALKING  : number  = 0x00; // 1: haut, 2: bas,3: droite
+    OBJECT_DIRECTION_WALKING  : number  = 0x00; // 01 -> haut , 00 ->  bas , 10 -> gauche, 11 -> droite
     OBJECT_FACING  : number  = 0x00; //0: bas, 8: gauche , 0x0C: droite, 4: haut
     OBJECT_STEP_TYPE  : number  = 0x03; // 3: wait, 1: turn, 7: walk
     OBJECT_STEP_DURATION  : number  = 0x00;
@@ -70,7 +70,7 @@ class NPCWatcher
         if(this.emulator.memoryRead(this.slot) == 0 && this.created == true)
         {
             // Il a été supprimé, on le réalloue
-            return false;
+            //return false;
         }
         if(this.created == false)
             this.created = true;
@@ -99,7 +99,8 @@ class GBPluginNPCInjector extends GBPlugin
     private static NPCBLOCKSTART = 0xD4D6;
 
     private npcsToAdd : Array<NPC>;
-    private npcsAdded : Array<NPCWatcher>;
+    //private npcsAdded : Array<NPCWatcher>;
+    public npcsAdded : Array<NPCWatcher>;
 
     constructor()
     {
@@ -169,4 +170,18 @@ let hh = new GBPluginNPCInjector();
 (<any>window).injectNPC = function(npc)
 {
     hh.registerNPC(npc);
+};
+
+(<any>window).testNPC = function(type)
+{
+    hh.npcsAdded[0].set("OBJECT_MOVEMENTTYPE",type);
+    hh.npcsAdded[0].set("OBJECT_DIRECTION_WALKING",0x01);
+    hh.npcsAdded[0].set("OBJECT_STEP_DURATION",16);
+    hh.npcsAdded[0].set("OBJECT_FACING",4);
+    hh.npcsAdded[0].set("OBJECT_NEXT_MAP_X",hh.npcsAdded[0].npc.OBJECT_MAP_X);
+    hh.npcsAdded[0].set("OBJECT_NEXT_MAP_Y",hh.npcsAdded[0].npc.OBJECT_MAP_Y - 1);
+    hh.npcsAdded[0].set("OBJECT_NEXT_TILE",0);
+    hh.npcsAdded[0].set("OBJECT_ACTION",2);
+    hh.npcsAdded[0].set("OBJECT_STEP_TYPE",7);
+    hh.npcsAdded[0].set("OBJECT_MAP_OBJECT_INDEX", 0x03);
 }

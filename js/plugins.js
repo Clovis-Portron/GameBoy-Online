@@ -69,7 +69,7 @@ var NPC = /** @class */ (function () {
         this.OBJECT_FLAGS1 = 0x00;
         this.OBJECT_FLAGS2 = 0x00;
         this.OBJECT_PALETTE = 0x01;
-        this.OBJECT_DIRECTION_WALKING = 0x00; // 1: haut, 2: bas,3: droite
+        this.OBJECT_DIRECTION_WALKING = 0x00; // 01 -> haut , 00 ->  bas , 10 -> gauche, 11 -> droite
         this.OBJECT_FACING = 0x00; //0: bas, 8: gauche , 0x0C: droite, 4: haut
         this.OBJECT_STEP_TYPE = 0x03; // 3: wait, 1: turn, 7: walk
         this.OBJECT_STEP_DURATION = 0x00;
@@ -196,6 +196,19 @@ window.NPC = NPC;
 window.INPC = new NPC();
 window.injectNPC = function (npc) {
     hh.registerNPC(npc);
+};
+window.testNPC = function (type) {
+    hh.npcsAdded[0].set("OBJECT_MOVEMENTTYPE", type);
+    hh.npcsAdded[0].set("OBJECT_DIRECTION_WALKING", 0x01);
+    hh.npcsAdded[0].set("OBJECT_STEP_DURATION", 16);
+    hh.npcsAdded[0].set("OBJECT_FACING", 4);
+    hh.npcsAdded[0].set("OBJECT_NEXT_MAP_X", hh.npcsAdded[0].npc.OBJECT_MAP_X);
+    hh.npcsAdded[0].set("OBJECT_NEXT_MAP_Y", hh.npcsAdded[0].npc.OBJECT_MAP_Y - 1);
+    hh.npcsAdded[0].set("OBJECT_NEXT_TILE", 0);
+    hh.npcsAdded[0].set("OBJECT_ACTION", 2);
+    hh.npcsAdded[0].set("OBJECT_STEP_TYPE", 7);
+    hh.npcsAdded[0].set("OBJECT_MAP_OBJECT_INDEX", 0x03);
+    hh.npcsAdded[0].set("OBJECT_FLAGS1", 0x0C);
 };
 /// <reference path="GBPluginScheduler.ts" />
 /// <reference path="GBPluginNPCInjector.ts" />
