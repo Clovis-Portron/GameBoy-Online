@@ -29,9 +29,9 @@ class NPC
     OBJECT_SPRITE_Y  : number  = 0x0A;
     OBJECT_SPRITE_X_OFFSET : number = 0;
     OBJECT_SPRITE_Y_OFFSET : number = 0;
-    OBJECT_MOVEMENT_BYTE_INDEX : number = 0;
-    u1 : number = 0;
-    u2 : number = 0;
+    OBJECT_MOVEMENT_BYTE_INDEX : number = 0; 
+    MAP_INDEX : number = 0; // Pas utilisé à l'origine
+    MAP_BANK : number = 0; // Pas utilisé à l'origine
     u3 : number = 0;
     u4 : number = 0;
     OBJECT_RANGE : number = 0;
@@ -137,6 +137,13 @@ class NPCWatcher
             this.created = true;
         if(this.mustUpdate == false)
             return true;
+		
+		this.npc.MAP_INDEX = this.memoryRead(0xDA01);
+		this.npc.MAP_BANK = this.memoryRead(0xDA01);
+		
+		this.valuesToUpdate["MAP_INDEX"] = true;
+		this.valuesToUpdate["MAP_BANK"] = true;
+		
         let cell = this.slot;        
         for(let i = 0; i < Object.keys(this.npc).length; i++)
         {
