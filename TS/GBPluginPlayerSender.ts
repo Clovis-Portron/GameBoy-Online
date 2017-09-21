@@ -7,6 +7,7 @@ class GBPluginPlayerSender extends GBPlugin
     private channel : any;
     private iceCandidates : Array<RTCIceCandidate>;
     private connected : boolean = false;
+    private other : NPCWatcher = null;
 
     constructor()
     {
@@ -74,7 +75,7 @@ class GBPluginPlayerSender extends GBPlugin
         let player : NPC = JSON.parse(e.data);
         if((<any>window).NPCInjector.npcsAdded.length <= 0)
         {
-            (<any>window).NPCInjector.registerNPC(player);
+            this.other = (<any>window).NPCInjector.registerNPC(player);
         }
         else 
         {

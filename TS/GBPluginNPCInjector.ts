@@ -119,6 +119,10 @@ class NPCWatcher
         this.npc = npc;
         this.mustUpdate = true;
         this.created = false;
+        for(let i = 0; i < Object.keys(this.npc).length; i++)
+        {
+            this.valuesToUpdate[Object.keys(this.npc)[i]] = true;
+        }
     }
 
     public update()
