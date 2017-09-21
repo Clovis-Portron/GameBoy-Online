@@ -339,7 +339,7 @@ var GBPluginPlayerReceiver = /** @class */ (function (_super) {
     GBPluginPlayerReceiver.prototype.onMessage = function (e) {
         //console.log(e);
         //return;
-        console.log(JSON.parse(e.data));
+        //console.log(JSON.parse(e.data));        
         var player = JSON.parse(e.data);
         if (window.NPCInjector.npcsAdded.length <= 0) {
             window.NPCInjector.registerNPC(player);
@@ -413,7 +413,7 @@ var GBPluginPlayerSender = /** @class */ (function (_super) {
         this.connected = false;
     };
     GBPluginPlayerSender.prototype.onMessage = function (e) {
-        console.log(JSON.parse(e.data));
+        //console.log(JSON.parse(e.data));
         var player = JSON.parse(e.data);
         if (window.NPCInjector.npcsAdded.length <= 0) {
             window.NPCInjector.registerNPC(player);
