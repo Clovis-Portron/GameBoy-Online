@@ -104,6 +104,7 @@ var NPCWatcher = /** @class */ (function () {
         this.mustUpdate = false;
         this.valuesToUpdate = [];
         this.created = false;
+        this.mustDelete = false;
         this.npc = npc;
         this.slot = slot;
         this.emulator = emulator;
@@ -161,7 +162,7 @@ var NPCWatcher = /** @class */ (function () {
         }
     };
     NPCWatcher.prototype.update = function () {
-        if (this.emulator.memoryRead(this.slot) == 0 && this.created == true) {
+        if ((this.emulator.memoryRead(this.slot) == 0 && this.created == true) || this.mustDelete) {
             // Il a été supprimé, on le réalloue
             return false;
         }
@@ -205,7 +206,8 @@ var GBPluginNPCInjector = /** @class */ (function (_super) {
             return;
         for (var i = 0; i < this.npcsAdded.length;) {
             if (this.npcsAdded[i].update() == false) {
-                this.npcsToAdd.push(this.npcsAdded[i].npc);
+                if (this.npcsAdded[i].mustDelete == false)
+                    this.npcsToAdd.push(this.npcsAdded[i].npc);
                 this.npcsAdded.splice(i, 1);
             }
             else
@@ -289,6 +291,7 @@ var GBPluginPlayerReceiver = /** @class */ (function (_super) {
     function GBPluginPlayerReceiver() {
         var _this = _super.call(this) || this;
         _this.connected = false;
+        _this.counterInterval = 10;
         window.GBPluginScheduler.GetInstance().registerPluginRun(_this);
         _this.iceCandidates = [];
         _this.connection = new RTCPeerConnection({
@@ -360,16 +363,33 @@ var GBPluginPlayerReceiver = /** @class */ (function (_super) {
         }
         else {
             clone = window.NPCInjector.npcsAdded[0].npc;
-            clone.OBJECT_MAP_X = other.OBJECT_MAP_X;
-            clone.OBJECT_MAP_Y = other.OBJECT_MAP_Y;
-            clone.OBJECT_NEXT_MAP_X = other.OBJECT_NEXT_MAP_X;
-            clone.OBJECT_NEXT_MAP_Y = other.OBJECT_NEXT_MAP_Y;
-            clone.OBJECT_PALETTE = 2;
-            clone.OBJECT_SPRITE_X = other.OBJECT_SPRITE_X;
-            clone.OBJECT_SPRITE_Y = other.OBJECT_SPRITE_Y;
-            clone.OBJECT_FACING = other.OBJECT_FACING;
-            clone.OBJECT_FACING_STEP = other.OBJECT_FACING_STEP;
-            window.NPCInjector.npcsAdded[0].reset(clone);
+            // Si trop loin pour marcher, on TP
+            if (Math.abs(other.OBJECT_MAP_X - clone.OBJECT_MAP_X) > 2 || Math.abs(other.OBJECT_MAP_Y - clone.OBJECT_MAP_Y) > 2) {
+                clone.OBJECT_MAP_X = other.OBJECT_MAP_X;
+                clone.OBJECT_MAP_Y = other.OBJECT_MAP_Y;
+                clone.OBJECT_NEXT_MAP_X = other.OBJECT_NEXT_MAP_X;
+                clone.OBJECT_NEXT_MAP_Y = other.OBJECT_NEXT_MAP_Y;
+                clone.OBJECT_PALETTE = 2;
+                clone.OBJECT_SPRITE_X = other.OBJECT_SPRITE_X;
+                clone.OBJECT_SPRITE_Y = other.OBJECT_SPRITE_Y;
+                clone.OBJECT_FACING = other.OBJECT_FACING;
+                clone.OBJECT_FACING_STEP = other.OBJECT_FACING_STEP;
+                window.NPCInjector.npcsAdded[0].reset(clone);
+            }
+            else {
+                if (other.OBJECT_MAP_X > clone.OBJECT_MAP_X) {
+                    window.NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.RIGHT);
+                }
+                else if (other.OBJECT_MAP_X < clone.OBJECT_MAP_X) {
+                    window.NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.LEFT);
+                }
+                else if (other.OBJECT_MAP_Y > clone.OBJECT_MAP_Y) {
+                    window.NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.DOWN);
+                }
+                else if (other.OBJECT_MAP_Y < clone.OBJECT_MAP_Y) {
+                    window.NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.UP);
+                }
+            }
         }
     };
     GBPluginPlayerReceiver.prototype.run = function (emulator) {
@@ -394,6 +414,7 @@ var GBPluginPlayerSender = /** @class */ (function (_super) {
         var _this = _super.call(this) || this;
         _this.connected = false;
         _this.other = null;
+        _this.counterInterval = 10;
         window.GBPluginScheduler.GetInstance().registerPluginRun(_this);
         _this.iceCandidates = [];
         _this.connection = new RTCPeerConnection({
@@ -458,16 +479,33 @@ var GBPluginPlayerSender = /** @class */ (function (_super) {
         }
         else {
             clone = window.NPCInjector.npcsAdded[0].npc;
-            clone.OBJECT_MAP_X = other.OBJECT_MAP_X;
-            clone.OBJECT_MAP_Y = other.OBJECT_MAP_Y;
-            clone.OBJECT_NEXT_MAP_X = other.OBJECT_NEXT_MAP_X;
-            clone.OBJECT_NEXT_MAP_Y = other.OBJECT_NEXT_MAP_Y;
-            clone.OBJECT_PALETTE = 2;
-            clone.OBJECT_SPRITE_X = other.OBJECT_SPRITE_X;
-            clone.OBJECT_SPRITE_Y = other.OBJECT_SPRITE_Y;
-            clone.OBJECT_FACING = other.OBJECT_FACING;
-            clone.OBJECT_FACING_STEP = other.OBJECT_FACING_STEP;
-            window.NPCInjector.npcsAdded[0].reset(clone);
+            // Si trop loin pour marcher, on TP
+            if (Math.abs(other.OBJECT_MAP_X - clone.OBJECT_MAP_X) > 2 || Math.abs(other.OBJECT_MAP_Y - clone.OBJECT_MAP_Y) > 2) {
+                clone.OBJECT_MAP_X = other.OBJECT_MAP_X;
+                clone.OBJECT_MAP_Y = other.OBJECT_MAP_Y;
+                clone.OBJECT_NEXT_MAP_X = other.OBJECT_NEXT_MAP_X;
+                clone.OBJECT_NEXT_MAP_Y = other.OBJECT_NEXT_MAP_Y;
+                clone.OBJECT_PALETTE = 2;
+                clone.OBJECT_SPRITE_X = other.OBJECT_SPRITE_X;
+                clone.OBJECT_SPRITE_Y = other.OBJECT_SPRITE_Y;
+                clone.OBJECT_FACING = other.OBJECT_FACING;
+                clone.OBJECT_FACING_STEP = other.OBJECT_FACING_STEP;
+                window.NPCInjector.npcsAdded[0].reset(clone);
+            }
+            else {
+                if (other.OBJECT_MAP_X > clone.OBJECT_MAP_X) {
+                    window.NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.RIGHT);
+                }
+                else if (other.OBJECT_MAP_X < clone.OBJECT_MAP_X) {
+                    window.NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.LEFT);
+                }
+                else if (other.OBJECT_MAP_Y > clone.OBJECT_MAP_Y) {
+                    window.NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.DOWN);
+                }
+                else if (other.OBJECT_MAP_Y < clone.OBJECT_MAP_Y) {
+                    window.NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.UP);
+                }
+            }
         }
     };
     GBPluginPlayerSender.prototype.run = function (emulator) {

@@ -11,6 +11,7 @@ class GBPluginPlayerReceiver extends GBPlugin
     constructor()
     {
         super();
+        this.counterInterval = 10;
         (<any>window).GBPluginScheduler.GetInstance().registerPluginRun(this);
         this.iceCandidates = [];
         this.connection = new RTCPeerConnection({
@@ -99,18 +100,40 @@ class GBPluginPlayerReceiver extends GBPlugin
         else 
         {
             clone = (<any>window).NPCInjector.npcsAdded[0].npc;
-            clone.OBJECT_MAP_X = other.OBJECT_MAP_X;
-            clone.OBJECT_MAP_Y = other.OBJECT_MAP_Y;
-            clone.OBJECT_NEXT_MAP_X = other.OBJECT_NEXT_MAP_X;
-            clone.OBJECT_NEXT_MAP_Y = other.OBJECT_NEXT_MAP_Y;
-            clone.OBJECT_PALETTE = 2;
-            clone.OBJECT_SPRITE_X = other.OBJECT_SPRITE_X;
-            clone.OBJECT_SPRITE_Y = other.OBJECT_SPRITE_Y;
-            clone.OBJECT_FACING = other.OBJECT_FACING;
-            clone.OBJECT_FACING_STEP = other.OBJECT_FACING_STEP;
-            (<any>window).NPCInjector.npcsAdded[0].reset(clone);
+            // Si trop loin pour marcher, on TP
+            if(Math.abs(other.OBJECT_MAP_X - clone.OBJECT_MAP_X) > 2 || Math.abs(other.OBJECT_MAP_Y - clone.OBJECT_MAP_Y) > 2)
+            {
+                clone.OBJECT_MAP_X = other.OBJECT_MAP_X;
+                clone.OBJECT_MAP_Y = other.OBJECT_MAP_Y;
+                clone.OBJECT_NEXT_MAP_X = other.OBJECT_NEXT_MAP_X;
+                clone.OBJECT_NEXT_MAP_Y = other.OBJECT_NEXT_MAP_Y;
+                clone.OBJECT_PALETTE = 2;
+                clone.OBJECT_SPRITE_X = other.OBJECT_SPRITE_X;
+                clone.OBJECT_SPRITE_Y = other.OBJECT_SPRITE_Y;
+                clone.OBJECT_FACING = other.OBJECT_FACING;
+                clone.OBJECT_FACING_STEP = other.OBJECT_FACING_STEP;
+                (<any>window).NPCInjector.npcsAdded[0].reset(clone);
+            }
+            else 
+            {
+                if(other.OBJECT_MAP_X > clone.OBJECT_MAP_X)
+                {
+                    (<any>window).NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.RIGHT);
+                }
+                else if(other.OBJECT_MAP_X < clone.OBJECT_MAP_X)
+                {
+                    (<any>window).NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.LEFT);
+                }
+                else if(other.OBJECT_MAP_Y > clone.OBJECT_MAP_Y)
+                {
+                    (<any>window).NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.DOWN);
+                }
+                else if(other.OBJECT_MAP_Y < clone.OBJECT_MAP_Y)
+                {
+                    (<any>window).NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.UP);
+                }
+            }
         }
-        
     }
 
 

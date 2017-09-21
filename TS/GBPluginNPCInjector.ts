@@ -52,6 +52,7 @@ class NPCWatcher
     private emulator : any;
     private valuesToUpdate : Array<boolean> = [];
     private created = false;
+    public mustDelete = false;
 
     constructor(emulator,slot,npc: NPC)
     {
@@ -127,7 +128,7 @@ class NPCWatcher
 
     public update()
     {
-        if(this.emulator.memoryRead(this.slot) == 0 && this.created == true)
+        if((this.emulator.memoryRead(this.slot) == 0 && this.created == true) || this.mustDelete)
         {
             // Il a été supprimé, on le réalloue
             return false;
@@ -179,7 +180,8 @@ class GBPluginNPCInjector extends GBPlugin
         {
             if(this.npcsAdded[i].update() == false)
             {
-                this.npcsToAdd.push(this.npcsAdded[i].npc);
+                if(this.npcsAdded[i].mustDelete == false)
+                    this.npcsToAdd.push(this.npcsAdded[i].npc);
                 this.npcsAdded.splice(i, 1);
             }
             else 
