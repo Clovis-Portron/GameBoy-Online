@@ -119,7 +119,7 @@ var NPCWatcher = /** @class */ (function () {
     NPCWatcher.prototype.update = function () {
         if (this.emulator.memoryRead(this.slot) == 0 && this.created == true) {
             // Il a été supprimé, on le réalloue
-            return false;
+            //return false;
         }
         if (this.created == false)
             this.created = true;
@@ -197,19 +197,31 @@ window.INPC = new NPC();
 window.injectNPC = function (npc) {
     hh.registerNPC(npc);
 };
-window.testNPC = function (type) {
-    hh.npcsAdded[0].set("OBJECT_MOVEMENTTYPE", type);
+window.testNPC = function (TEST) {
+    hh.npcsAdded[0].set("OBJECT_MOVEMENTTYPE", 0xB);
     hh.npcsAdded[0].set("OBJECT_DIRECTION_WALKING", 0x01);
     hh.npcsAdded[0].set("OBJECT_STEP_DURATION", 16);
     hh.npcsAdded[0].set("OBJECT_FACING", 4);
     hh.npcsAdded[0].set("OBJECT_NEXT_MAP_X", hh.npcsAdded[0].npc.OBJECT_MAP_X);
     hh.npcsAdded[0].set("OBJECT_NEXT_MAP_Y", hh.npcsAdded[0].npc.OBJECT_MAP_Y - 1);
     hh.npcsAdded[0].set("OBJECT_NEXT_TILE", 0);
-    hh.npcsAdded[0].set("OBJECT_ACTION", 2);
+    hh.npcsAdded[0].set("OBJECT_ACTION", 3);
     hh.npcsAdded[0].set("OBJECT_STEP_TYPE", 7);
-    hh.npcsAdded[0].set("OBJECT_MAP_OBJECT_INDEX", 0x03);
-    hh.npcsAdded[0].set("OBJECT_FLAGS1", 0x0C);
+    hh.npcsAdded[0].set("OBJECT_PALETTE", 3);
+    //chercher le comportement inoffensif
+    hh.npcsAdded[0].set("OBJECT_MAP_OBJECT_INDEX", TEST);
 };
+// 0 Crash
+// 1 Un(e) superbe RETOUR
+// 2 //
+// 3 //
+// 4 Une poupée géante ! C'est super doux !
+// 5 Maman de la fille
+// 6 Crash
+// 7
+// 8 Crash
+// 9
+// B Crash 
 /// <reference path="GBPluginScheduler.ts" />
 /// <reference path="GBPluginNPCInjector.ts" />
 var GBPluginNPCInfo = /** @class */ (function (_super) {
