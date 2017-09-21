@@ -4,71 +4,89 @@
 class GBPluginPlayerSender extends GBPlugin
 {
     private connection : any;
-    private dataChannel : any;
+    private channel : any;
+    private iceCandidates : Array<RTCIceCandidate>;
+    private connected : boolean = false;
 
     constructor()
     {
         super();
         (<any>window).GBPluginScheduler.GetInstance().registerPluginRun(this);
-        let conf : RTCConfiguration = {
+        this.iceCandidates = [];
+        this.connection = new RTCPeerConnection({
+            "iceServers": [{
+                "urls" : "stun:stun.l.google.com:19302",
+            }]
+        });
+        this.connection.onicecandidate = (event) => {this.OnIceCandidate(event)};
+        this.channel = this.connection.createDataChannel('PlayerExchange', {
+        });
+        this.channel.onmessage = (e) => { this.onMessage(e); };
+        this.channel.onopen = (e) => { this.onOpen(e); };
+        this.channel.onclose =(e) => { this.onClose(e); };
+        this.connection.createOffer().then((offer) => { 
+            this.connection.setLocalDescription(offer);
+            console.log('window.Client.receiveOffer(new RTCSessionDescription(JSON.parse(\'' + JSON.stringify(offer).replace(/\\/g, "\\\\") + '\')));')
+        }).catch(function(error){ 
 
-        };
-        this.connection = new RTCPeerConnection(null);
-        this.dataChannel = this.connection.createDataChannel("SendTrainer");
-
-        this.connection.onicecandidate = function (evt) {
-            this.dataChannel.send(JSON.stringify({ "candidate": evt.candidate }));
-        };
-
-        this.dataChannel.onerror = function (error) {
-            console.log("Data Channel Error:", error);
-          };
-          
-          this.dataChannel.onmessage = function (event) {
-            console.log("Got Data Channel Message:", event.data);
-          };
-          
-          this.dataChannel.onopen = () => {
-            this.dataChannel.send("Hello World!");
-          };
-          
-          this.dataChannel.onclose = function () {
-            console.log("The Data Channel is Closed");
-          };
-
-
+        });
         console.log("STARTING NETWORK");
     }
 
-
-    private onError()
-    {
-
+    public setCandidates(candidates) {
+        for (var i = 0; i < candidates.length; i++) {
+            this.connection.addIceCandidate(new RTCIceCandidate(candidates[i]));
+        }
     }
 
-    private onOpen()
-    {
-
+    public setRemoteDescription(desc) {
+        this.connection.setRemoteDescription(desc);
+        console.log("window.Client.setCandidates(JSON.parse('" + JSON.stringify(this.iceCandidates).replace(/\\/g, "\\\\") + "'));")
+        
     }
 
-    private onClose()
+    private OnIceCandidate(event)
     {
-
+        if (event.candidate) {
+            this.iceCandidates.push(event.candidate);
+        }
     }
 
-    private onMessage()
+    private onOpen(e)
     {
+        this.connected = true;
+    }
 
+    private onClose(e)
+    {
+        this.connected = false;
     }
 
 
+    private onError(e)
+    {
+        this.connected = false;
+    }
 
+    private onMessage(e)
+    {
+        console.log(JSON.parse(e.data));
+        
+    }
 
     public run(emulator : any) : void 
     {
         if(this.canRun() == false)
             return;
+        if(this.connected == false)
+        {
+            return;
+        }
+        if((<any>window).NPCInfo.npcs <= 0)
+            return;
+        let player : NPC = (<any>window).NPCInfo.npcs[0];
+        this.channel.send(JSON.stringify(player));
     }
 }
 
-new GBPluginPlayerSender();
+(<any>window).Server = new GBPluginPlayerSender();

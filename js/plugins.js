@@ -257,8 +257,9 @@ window.testNPC = function (even) {
 var GBPluginNPCInfo = /** @class */ (function (_super) {
     __extends(GBPluginNPCInfo, _super);
     function GBPluginNPCInfo() {
-        var _this = _super !== null && _super.apply(this, arguments) || this;
+        var _this = _super.call(this) || this;
         _this.npcs = [];
+        window.GBPluginScheduler.GetInstance().registerPluginRun(_this);
         return _this;
     }
     GBPluginNPCInfo.prototype.run = function (emulator) {
@@ -266,7 +267,6 @@ var GBPluginNPCInfo = /** @class */ (function (_super) {
             return;
         //console.log("NPC INFO");
         this.npcs = this.searchNPCS(emulator);
-        window.GBPluginScheduler.GetInstance().registerPluginRun(this);
     };
     GBPluginNPCInfo.prototype.searchNPCS = function (emulator) {
         var results = [];
@@ -292,52 +292,149 @@ var GBPluginNPCInfo = /** @class */ (function (_super) {
     GBPluginNPCInfo.NPCBLOCKSTART = 0xD4D6;
     return GBPluginNPCInfo;
 }(GBPlugin));
-var hhh = new GBPluginNPCInfo();
-window.dumpNPC = function () {
-    return hhh.npcs;
-};
+window.NPCInfo = new GBPluginNPCInfo();
+/// <reference path="GBPluginScheduler.ts" />
+/// <reference path="GBPluginNPCInjector.ts" />
+var GBPluginPlayerReceiver = /** @class */ (function (_super) {
+    __extends(GBPluginPlayerReceiver, _super);
+    function GBPluginPlayerReceiver() {
+        var _this = _super.call(this) || this;
+        _this.connected = false;
+        window.GBPluginScheduler.GetInstance().registerPluginRun(_this);
+        _this.iceCandidates = [];
+        _this.connection = new RTCPeerConnection({
+            "iceServers": [{
+                    "urls": "stun:stun.l.google.com:19302",
+                }]
+        });
+        _this.connection.onicecandidate = function (event) { _this.onIceCandidate(event); };
+        _this.connection.ondatachannel = function (channel) { _this.onDataChannel(channel); };
+        console.log("Waiting for offer");
+        return _this;
+    }
+    GBPluginPlayerReceiver.prototype.setCandidates = function (candidates) {
+        for (var i = 0; i < candidates.length; i++) {
+            this.connection.addIceCandidate(new RTCIceCandidate(candidates[i]));
+        }
+        console.log("window.Server.setCandidates(JSON.parse('" + JSON.stringify(this.iceCandidates).replace(/\\/g, "\\\\") + "'));");
+    };
+    GBPluginPlayerReceiver.prototype.receiveOffer = function (offerSdp) {
+        var _this = this;
+        this.connection.setRemoteDescription(offerSdp);
+        this.connection.createAnswer().then(function (answer) {
+            _this.connection.setLocalDescription(answer);
+            console.log('window.Server.setRemoteDescription(new RTCSessionDescription(JSON.parse(\'' + JSON.stringify(answer).replace(/\\/g, "\\\\") + '\')));');
+        }).catch(function (error) { });
+    };
+    GBPluginPlayerReceiver.prototype.onIceCandidate = function (event) {
+        if (event.candidate) {
+            this.iceCandidates.push(event.candidate);
+        }
+    };
+    GBPluginPlayerReceiver.prototype.onDataChannel = function (event) {
+        var _this = this;
+        this.channel = event.channel;
+        this.channel.onmessage = function (e) { _this.onMessage(e); };
+        this.channel.onopen = function (e) { _this.onOpen(e); };
+        this.channel.onclose = function (e) { _this.onClose(e); };
+    };
+    GBPluginPlayerReceiver.prototype.onOpen = function (e) {
+        console.log("New Connection");
+        this.connected = true;
+    };
+    GBPluginPlayerReceiver.prototype.onClose = function (e) {
+        console.log("Close Connection");
+        this.connected = false;
+    };
+    GBPluginPlayerReceiver.prototype.onError = function (e) {
+        console.log(e);
+        this.connected = false;
+    };
+    GBPluginPlayerReceiver.prototype.onMessage = function (e) {
+        //console.log(e);
+        //return;
+        console.log(JSON.parse(e.data));
+    };
+    GBPluginPlayerReceiver.prototype.run = function (emulator) {
+        if (this.canRun() == false)
+            return;
+        if (this.connected == false) {
+            return;
+        }
+        if (window.NPCInfo.npcs <= 0)
+            return;
+        var player = window.NPCInfo.npcs[0];
+        this.channel.send(JSON.stringify(player));
+    };
+    return GBPluginPlayerReceiver;
+}(GBPlugin));
+window.Client = new GBPluginPlayerReceiver();
 /// <reference path="GBPluginScheduler.ts" />
 /// <reference path="GBPluginNPCInjector.ts" />
 var GBPluginPlayerSender = /** @class */ (function (_super) {
     __extends(GBPluginPlayerSender, _super);
     function GBPluginPlayerSender() {
         var _this = _super.call(this) || this;
+        _this.connected = false;
         window.GBPluginScheduler.GetInstance().registerPluginRun(_this);
-        var conf = {};
-        _this.connection = new RTCPeerConnection(null);
-        _this.dataChannel = _this.connection.createDataChannel("SendTrainer");
-        _this.connection.onicecandidate = function (evt) {
-            this.dataChannel.send(JSON.stringify({ "candidate": evt.candidate }));
-        };
-        _this.dataChannel.onerror = function (error) {
-            console.log("Data Channel Error:", error);
-        };
-        _this.dataChannel.onmessage = function (event) {
-            console.log("Got Data Channel Message:", event.data);
-        };
-        _this.dataChannel.onopen = function () {
-            _this.dataChannel.send("Hello World!");
-        };
-        _this.dataChannel.onclose = function () {
-            console.log("The Data Channel is Closed");
-        };
+        _this.iceCandidates = [];
+        _this.connection = new RTCPeerConnection({
+            "iceServers": [{
+                    "urls": "stun:stun.l.google.com:19302",
+                }]
+        });
+        _this.connection.onicecandidate = function (event) { _this.OnIceCandidate(event); };
+        _this.channel = _this.connection.createDataChannel('PlayerExchange', {});
+        _this.channel.onmessage = function (e) { _this.onMessage(e); };
+        _this.channel.onopen = function (e) { _this.onOpen(e); };
+        _this.channel.onclose = function (e) { _this.onClose(e); };
+        _this.connection.createOffer().then(function (offer) {
+            _this.connection.setLocalDescription(offer);
+            console.log('window.Client.receiveOffer(new RTCSessionDescription(JSON.parse(\'' + JSON.stringify(offer).replace(/\\/g, "\\\\") + '\')));');
+        }).catch(function (error) {
+        });
         console.log("STARTING NETWORK");
         return _this;
     }
-    GBPluginPlayerSender.prototype.onError = function () {
+    GBPluginPlayerSender.prototype.setCandidates = function (candidates) {
+        for (var i = 0; i < candidates.length; i++) {
+            this.connection.addIceCandidate(new RTCIceCandidate(candidates[i]));
+        }
     };
-    GBPluginPlayerSender.prototype.onOpen = function () {
+    GBPluginPlayerSender.prototype.setRemoteDescription = function (desc) {
+        this.connection.setRemoteDescription(desc);
+        console.log("window.Client.setCandidates(JSON.parse('" + JSON.stringify(this.iceCandidates).replace(/\\/g, "\\\\") + "'));");
     };
-    GBPluginPlayerSender.prototype.onClose = function () {
+    GBPluginPlayerSender.prototype.OnIceCandidate = function (event) {
+        if (event.candidate) {
+            this.iceCandidates.push(event.candidate);
+        }
     };
-    GBPluginPlayerSender.prototype.onMessage = function () {
+    GBPluginPlayerSender.prototype.onOpen = function (e) {
+        this.connected = true;
+    };
+    GBPluginPlayerSender.prototype.onClose = function (e) {
+        this.connected = false;
+    };
+    GBPluginPlayerSender.prototype.onError = function (e) {
+        this.connected = false;
+    };
+    GBPluginPlayerSender.prototype.onMessage = function (e) {
+        console.log(JSON.parse(e.data));
     };
     GBPluginPlayerSender.prototype.run = function (emulator) {
         if (this.canRun() == false)
             return;
+        if (this.connected == false) {
+            return;
+        }
+        if (window.NPCInfo.npcs <= 0)
+            return;
+        var player = window.NPCInfo.npcs[0];
+        this.channel.send(JSON.stringify(player));
     };
     return GBPluginPlayerSender;
 }(GBPlugin));
-new GBPluginPlayerSender();
+window.Server = new GBPluginPlayerSender();
 
 },{}]},{},[1]);

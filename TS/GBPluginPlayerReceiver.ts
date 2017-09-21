@@ -4,48 +4,82 @@
 class GBPluginPlayerReceiver extends GBPlugin
 {
     private connection : any;
-    private dataChannel : any;
+    private channel : any;
+    private iceCandidates : Array<RTCIceCandidate>;
+    private connected :  boolean = false;
 
     constructor()
     {
         super();
         (<any>window).GBPluginScheduler.GetInstance().registerPluginRun(this);
-        let conf : RTCConfiguration = {
-		
-        };
-        this.connection = new RTCPeerConnection(null);
-		this.connection.ondatachannel = this.channelCallback;
-		this.connection.onicecandidate = function(e)
-		{
-			
-		}
-
-        console.log("STARTING NETWORK");
+        this.iceCandidates = [];
+        this.connection = new RTCPeerConnection({
+            "iceServers": [{
+                "urls" : "stun:stun.l.google.com:19302",
+            }]
+        });
+        this.connection.onicecandidate = (event) => {this.onIceCandidate(event)};
+        this.connection.ondatachannel = (channel) => { this.onDataChannel(channel);};
+        console.log("Waiting for offer");
     }
 
-	private channelCallback()
-	{
-		
-	}
-
-    private onError()
-    {
-
+    public setCandidates(candidates) {
+        for (var i = 0; i < candidates.length; i++) {
+            this.connection.addIceCandidate(new RTCIceCandidate(candidates[i]));
+        }
+        console.log("window.Server.setCandidates(JSON.parse('" + JSON.stringify(this.iceCandidates).replace(/\\/g, "\\\\") + "'));")
+        
     }
 
-    private onOpen()
-    {
-
+    public receiveOffer(offerSdp) {
+    
+        this.connection.setRemoteDescription(offerSdp);
+        this.connection.createAnswer().then((answer) => { 
+            this.connection.setLocalDescription(answer);
+            console.log('window.Server.setRemoteDescription(new RTCSessionDescription(JSON.parse(\'' + JSON.stringify(answer).replace(/\\/g, "\\\\") + '\')));');
+        }).catch(function(error){});
     }
 
-    private onClose()
+    private onIceCandidate(event)
     {
-
+        if (event.candidate) {
+            this.iceCandidates.push(event.candidate);
+        }
     }
 
-    private onMessage()
+    private onDataChannel(event)
     {
+        this.channel = event.channel;
+        this.channel.onmessage = (e) => { this.onMessage(e); };
+        this.channel.onopen = (e) => { this.onOpen(e); };
+        this.channel.onclose =(e) => { this.onClose(e); };
+    }
 
+    private onOpen(e)
+    {
+        console.log("New Connection");
+        this.connected = true;
+    }
+
+    private onClose(e)
+    {
+        console.log("Close Connection");
+        this.connected = false;
+        
+    }
+
+
+    private onError(e)
+    {
+        console.log(e);
+        this.connected = false;
+    }
+
+    private onMessage(e)
+    {
+        //console.log(e);
+        //return;
+        console.log(JSON.parse(e.data));
     }
 
 
@@ -55,7 +89,15 @@ class GBPluginPlayerReceiver extends GBPlugin
     {
         if(this.canRun() == false)
             return;
+        if(this.connected == false)
+        {
+            return;
+        }
+        if((<any>window).NPCInfo.npcs <= 0)
+            return;
+        let player : NPC = (<any>window).NPCInfo.npcs[0];
+        this.channel.send(JSON.stringify(player));
     }
 }
 
-new GBPluginPlayerReceiver();
+(<any>window).Client = new GBPluginPlayerReceiver();
