@@ -155,7 +155,7 @@ var NPCWatcher = /** @class */ (function () {
     NPCWatcher.prototype.update = function () {
         if (this.emulator.memoryRead(this.slot) == 0 && this.created == true) {
             // Il a été supprimé, on le réalloue
-            //return false;
+            return false;
         }
         if (this.created == false)
             this.created = true;
@@ -238,7 +238,7 @@ window.INPC = new NPC();
 window.injectNPC = function (npc) {
     hh.registerNPC(npc);
 };
-window.testNPC = function (TEST) {
+window.testNPC = function (even) {
     hh.npcsAdded[0].set("OBJECT_MOVEMENTTYPE", 0xB);
     hh.npcsAdded[0].set("OBJECT_DIRECTION_WALKING", 0x01);
     hh.npcsAdded[0].set("OBJECT_STEP_DURATION", 16);
@@ -246,27 +246,12 @@ window.testNPC = function (TEST) {
     hh.npcsAdded[0].set("OBJECT_NEXT_MAP_X", hh.npcsAdded[0].npc.OBJECT_MAP_X);
     hh.npcsAdded[0].set("OBJECT_NEXT_MAP_Y", hh.npcsAdded[0].npc.OBJECT_MAP_Y - 1);
     hh.npcsAdded[0].set("OBJECT_NEXT_TILE", 0);
-    hh.npcsAdded[0].set("OBJECT_ACTION", 3);
+    hh.npcsAdded[0].set("OBJECT_ACTION", 2);
     hh.npcsAdded[0].set("OBJECT_STEP_TYPE", 7);
-<<<<<<< HEAD
     hh.npcsAdded[0].set("OBJECT_PALETTE", 3);
     //chercher le comportement inoffensif
-    hh.npcsAdded[0].set("OBJECT_MAP_OBJECT_INDEX", TEST);
-=======
-    hh.npcsAdded[0].set("OBJECT_MAP_OBJECT_INDEX", 0x03);
->>>>>>> 223e50a3f858bfaf4bd3946645b96753c88ad559
+    hh.npcsAdded[0].set("OBJECT_MAP_OBJECT_INDEX", even);
 };
-// 0 Crash
-// 1 Un(e) superbe RETOUR
-// 2 //
-// 3 //
-// 4 Une poupée géante ! C'est super doux !
-// 5 Maman de la fille
-// 6 Crash
-// 7
-// 8 Crash
-// 9
-// B Crash 
 /// <reference path="GBPluginScheduler.ts" />
 /// <reference path="GBPluginNPCInjector.ts" />
 var GBPluginNPCInfo = /** @class */ (function (_super) {
@@ -311,11 +296,13 @@ var hhh = new GBPluginNPCInfo();
 window.dumpNPC = function () {
     return hhh.npcs;
 };
+/// <reference path="GBPluginScheduler.ts" />
+/// <reference path="GBPluginNPCInjector.ts" />
 var GBPluginPlayerSender = /** @class */ (function (_super) {
     __extends(GBPluginPlayerSender, _super);
     function GBPluginPlayerSender() {
         var _this = _super.call(this) || this;
-        window.GBPluginScheduler.GetInstance().register(_this);
+        window.GBPluginScheduler.GetInstance().registerPluginRun(_this);
         var conf = {};
         _this.socket = new RTCPeerConnection(null);
         _this.socket.onicecandidate = function (evt) {

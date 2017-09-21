@@ -1,3 +1,5 @@
+/// <reference path="GBPluginScheduler.ts" />
+/// <reference path="GBPluginNPCInjector.ts" />
 
 class GBPluginPlayerSender extends GBPlugin
 {
@@ -6,7 +8,7 @@ class GBPluginPlayerSender extends GBPlugin
     constructor()
     {
         super();
-        (<any>window).GBPluginScheduler.GetInstance().register(this);
+        (<any>window).GBPluginScheduler.GetInstance().registerPluginRun(this);
         let conf : RTCConfiguration = {
 
         };
