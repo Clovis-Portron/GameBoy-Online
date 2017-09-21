@@ -14,6 +14,7 @@ class GBPluginNPCInfo extends GBPlugin
             return;
         //console.log("NPC INFO");
         this.npcs = this.searchNPCS(emulator);
+        (<any>window).GBPluginScheduler.GetInstance().registerPluginRun(this);
     }
 
     private searchNPCS(emulator : any) : Array<NPC>
@@ -47,7 +48,6 @@ class GBPluginNPCInfo extends GBPlugin
 }
 
 let hhh= new GBPluginNPCInfo();
-(<any>window).GBPluginScheduler.GetInstance().registerPluginRun(hhh);
 (<any>window).dumpNPC = function()
 {
     return hhh.npcs;

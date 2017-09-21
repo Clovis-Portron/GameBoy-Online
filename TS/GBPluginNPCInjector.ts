@@ -156,6 +156,7 @@ class GBPluginNPCInjector extends GBPlugin
         super();
         this.npcsToAdd = [];
         this.npcsAdded = [];
+        (<any>window).GBPluginScheduler.GetInstance().registerPluginRun(this);        
     }
 
     public run(emulator : any) : void 
@@ -213,7 +214,6 @@ class GBPluginNPCInjector extends GBPlugin
 
 // Injection
 let hh = new GBPluginNPCInjector();
-(<any>window).GBPluginScheduler.GetInstance().registerPluginRun(hh);
 (<any>window).NPC = NPC;
 (<any>window).INPC = new NPC();
 (<any>window).injectNPC = function(npc)

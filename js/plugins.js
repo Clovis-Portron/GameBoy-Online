@@ -1,3 +1,4 @@
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -188,6 +189,7 @@ var GBPluginNPCInjector = /** @class */ (function (_super) {
         var _this = _super.call(this) || this;
         _this.npcsToAdd = [];
         _this.npcsAdded = [];
+        window.GBPluginScheduler.GetInstance().registerPluginRun(_this);
         return _this;
     }
     GBPluginNPCInjector.prototype.run = function (emulator) {
@@ -231,7 +233,6 @@ var GBPluginNPCInjector = /** @class */ (function (_super) {
 }(GBPlugin));
 // Injection
 var hh = new GBPluginNPCInjector();
-window.GBPluginScheduler.GetInstance().registerPluginRun(hh);
 window.NPC = NPC;
 window.INPC = new NPC();
 window.injectNPC = function (npc) {
@@ -263,6 +264,7 @@ var GBPluginNPCInfo = /** @class */ (function (_super) {
             return;
         //console.log("NPC INFO");
         this.npcs = this.searchNPCS(emulator);
+        window.GBPluginScheduler.GetInstance().registerPluginRun(this);
     };
     GBPluginNPCInfo.prototype.searchNPCS = function (emulator) {
         var results = [];
@@ -289,8 +291,28 @@ var GBPluginNPCInfo = /** @class */ (function (_super) {
     return GBPluginNPCInfo;
 }(GBPlugin));
 var hhh = new GBPluginNPCInfo();
-window.GBPluginScheduler.GetInstance().registerPluginRun(hhh);
 window.dumpNPC = function () {
     return hhh.npcs;
 };
-//# sourceMappingURL=plugins.js.map
+var GBPluginPlayerSender = /** @class */ (function (_super) {
+    __extends(GBPluginPlayerSender, _super);
+    function GBPluginPlayerSender() {
+        var _this = _super.call(this) || this;
+        window.GBPluginScheduler.GetInstance().register(_this);
+        var conf = {};
+        _this.socket = new RTCPeerConnection(null);
+        _this.socket.onicecandidate = function (evt) {
+            console.log(evt);
+        };
+        console.log("STARTING NETWORK");
+        return _this;
+    }
+    GBPluginPlayerSender.prototype.run = function (emulator) {
+        if (this.canRun() == false)
+            return;
+    };
+    return GBPluginPlayerSender;
+}(GBPlugin));
+new GBPluginPlayerSender();
+
+},{}]},{},[1]);

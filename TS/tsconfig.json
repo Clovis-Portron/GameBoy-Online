@@ -4,7 +4,7 @@
     "module":"system",
     "target": "es5",
     "sourceMap": true,
-    "outFile": "./../js/plugins.js",
+    "outFile": "./../js/plugins-temp.js",
     "watch": false
   }
 }
