@@ -39,6 +39,13 @@ class NPC
 
 class NPCWatcher
 {
+    public static DIRECTION = {
+        "UP" : 0,
+        "DOWN" : 1,
+        "LEFT" :  2,
+        "RIGHT" : 3
+    };
+
     public npc : NPC;
     private mustUpdate = false;
     private slot : number;
@@ -65,12 +72,54 @@ class NPCWatcher
         this.mustUpdate = true;
     }
 
+    public walk(direction : number)
+    {
+        this.set("OBJECT_MOVEMENTTYPE",0x0b);
+        this.set("OBJECT_STEP_DURATION",16);
+        this.set("OBJECT_NEXT_TILE",0);
+        this.set("OBJECT_ACTION",2);
+        this.set("OBJECT_STEP_TYPE",7);
+        this.set("OBJECT_MAP_OBJECT_INDEX", 0x03);
+        this.set("OBJECT_RADIUS",0);
+        
+        
+
+        switch(direction)
+        {
+            case NPCWatcher.DIRECTION.UP:
+                this.set("OBJECT_DIRECTION_WALKING",0b01);
+                this.set("OBJECT_FACING",4);
+                this.set("OBJECT_NEXT_MAP_X",this.npc.OBJECT_MAP_X);
+                this.set("OBJECT_NEXT_MAP_Y",this.npc.OBJECT_MAP_Y - 1);
+            break;
+            case NPCWatcher.DIRECTION.DOWN:
+                this.set("OBJECT_DIRECTION_WALKING",0b00);
+                this.set("OBJECT_FACING",0);
+                this.set("OBJECT_NEXT_MAP_X",this.npc.OBJECT_MAP_X);
+                this.set("OBJECT_NEXT_MAP_Y",this.npc.OBJECT_MAP_Y + 1);
+            break;
+            case NPCWatcher.DIRECTION.LEFT:
+                this.set("OBJECT_DIRECTION_WALKING",0b10);
+                this.set("OBJECT_FACING",8);
+                this.set("OBJECT_NEXT_MAP_X",this.npc.OBJECT_MAP_X - 1);
+                this.set("OBJECT_NEXT_MAP_Y",this.npc.OBJECT_MAP_Y);
+            break;
+            case NPCWatcher.DIRECTION.RIGHT:
+                this.set("OBJECT_DIRECTION_WALKING",0b11);
+                this.set("OBJECT_FACING",0x0C);
+                this.set("OBJECT_NEXT_MAP_X",this.npc.OBJECT_MAP_X + 1);
+                this.set("OBJECT_NEXT_MAP_Y",this.npc.OBJECT_MAP_Y);
+            break;
+
+        }
+    }
+
     public update()
     {
         if(this.emulator.memoryRead(this.slot) == 0 && this.created == true)
         {
             // Il a été supprimé, on le réalloue
-            //return false;
+            return false;
         }
         if(this.created == false)
             this.created = true;
@@ -79,13 +128,13 @@ class NPCWatcher
         let cell = this.slot;        
         for(let i = 0; i < Object.keys(this.npc).length; i++)
         {
-            /*if(this.valuesToUpdate[Object.keys(this.npc)[i]] == true)
+            if(this.valuesToUpdate[Object.keys(this.npc)[i]] == true)
             {
                 this.emulator.memoryWrite(cell, this.npc[Object.keys(this.npc)[i]]);
                 this.valuesToUpdate[Object.keys(this.npc)[i]] = false;
             }
             else 
-                this.npc[Object.keys(this.npc)[i]] = this.emulator.memoryRead(cell);*/
+                this.npc[Object.keys(this.npc)[i]] = this.emulator.memoryRead(cell);
             this.emulator.memoryWrite(cell, this.npc[Object.keys(this.npc)[i]]);    
             cell = cell + 0x01;    
         }
@@ -118,7 +167,7 @@ class GBPluginNPCInjector extends GBPlugin
         {
             if(this.npcsAdded[i].update() == false)
             {
-                //this.npcsToAdd.push(this.npcsAdded[i].npc);
+                this.npcsToAdd.push(this.npcsAdded[i].npc);
                 this.npcsAdded.splice(i, 1);
             }
             else 
