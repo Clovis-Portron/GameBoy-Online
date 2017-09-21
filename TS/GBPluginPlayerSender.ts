@@ -87,6 +87,7 @@ class GBPluginPlayerSender extends GBPlugin
             clone.OBJECT_SPRITE_X = other.OBJECT_SPRITE_X;
             clone.OBJECT_SPRITE_Y = other.OBJECT_SPRITE_Y;
             clone.OBJECT_FACING = other.OBJECT_FACING;
+            clone.OBJECT_FACING_STEP = other.OBJECT_FACING_STEP;
             (<any>window).NPCInjector.registerNPC(clone);
         }
         else 
@@ -100,6 +101,7 @@ class GBPluginPlayerSender extends GBPlugin
             clone.OBJECT_SPRITE_X = other.OBJECT_SPRITE_X;
             clone.OBJECT_SPRITE_Y = other.OBJECT_SPRITE_Y;
             clone.OBJECT_FACING = other.OBJECT_FACING;
+            clone.OBJECT_FACING_STEP = other.OBJECT_FACING_STEP;
             (<any>window).NPCInjector.npcsAdded[0].reset(clone);
         }
         

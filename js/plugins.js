@@ -340,15 +340,36 @@ var GBPluginPlayerReceiver = /** @class */ (function (_super) {
         this.connected = false;
     };
     GBPluginPlayerReceiver.prototype.onMessage = function (e) {
-        //console.log(e);
-        //return;
-        //console.log(JSON.parse(e.data));        
-        var player = JSON.parse(e.data);
+        //console.log(JSON.parse(e.data));
+        var other = JSON.parse(e.data);
+        if (window.NPCInfo.npcs.length < 1)
+            return;
+        var clone = null;
         if (window.NPCInjector.npcsAdded.length <= 0) {
-            window.NPCInjector.registerNPC(player);
+            clone = window.NPCInfo.npcs[0];
+            clone.OBJECT_MAP_X = other.OBJECT_MAP_X;
+            clone.OBJECT_MAP_Y = other.OBJECT_MAP_Y;
+            clone.OBJECT_NEXT_MAP_X = other.OBJECT_NEXT_MAP_X;
+            clone.OBJECT_NEXT_MAP_Y = other.OBJECT_NEXT_MAP_Y;
+            clone.OBJECT_PALETTE = 2;
+            clone.OBJECT_SPRITE_X = other.OBJECT_SPRITE_X;
+            clone.OBJECT_SPRITE_Y = other.OBJECT_SPRITE_Y;
+            clone.OBJECT_FACING = other.OBJECT_FACING;
+            clone.OBJECT_FACING_STEP = other.OBJECT_FACING_STEP;
+            window.NPCInjector.registerNPC(clone);
         }
         else {
-            window.NPCInjector.npcsAdded[0].reset(player);
+            clone = window.NPCInjector.npcsAdded[0].npc;
+            clone.OBJECT_MAP_X = other.OBJECT_MAP_X;
+            clone.OBJECT_MAP_Y = other.OBJECT_MAP_Y;
+            clone.OBJECT_NEXT_MAP_X = other.OBJECT_NEXT_MAP_X;
+            clone.OBJECT_NEXT_MAP_Y = other.OBJECT_NEXT_MAP_Y;
+            clone.OBJECT_PALETTE = 2;
+            clone.OBJECT_SPRITE_X = other.OBJECT_SPRITE_X;
+            clone.OBJECT_SPRITE_Y = other.OBJECT_SPRITE_Y;
+            clone.OBJECT_FACING = other.OBJECT_FACING;
+            clone.OBJECT_FACING_STEP = other.OBJECT_FACING_STEP;
+            window.NPCInjector.npcsAdded[0].reset(clone);
         }
     };
     GBPluginPlayerReceiver.prototype.run = function (emulator) {
@@ -432,6 +453,7 @@ var GBPluginPlayerSender = /** @class */ (function (_super) {
             clone.OBJECT_SPRITE_X = other.OBJECT_SPRITE_X;
             clone.OBJECT_SPRITE_Y = other.OBJECT_SPRITE_Y;
             clone.OBJECT_FACING = other.OBJECT_FACING;
+            clone.OBJECT_FACING_STEP = other.OBJECT_FACING_STEP;
             window.NPCInjector.registerNPC(clone);
         }
         else {
@@ -444,6 +466,7 @@ var GBPluginPlayerSender = /** @class */ (function (_super) {
             clone.OBJECT_SPRITE_X = other.OBJECT_SPRITE_X;
             clone.OBJECT_SPRITE_Y = other.OBJECT_SPRITE_Y;
             clone.OBJECT_FACING = other.OBJECT_FACING;
+            clone.OBJECT_FACING_STEP = other.OBJECT_FACING_STEP;
             window.NPCInjector.npcsAdded[0].reset(clone);
         }
     };
