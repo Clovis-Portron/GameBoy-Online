@@ -160,20 +160,21 @@ class GBPluginNPCInjector extends GBPlugin
 {
     private static NPCBLOCKSTART = 0xD4D6;
 
-    private npcsToAdd : Array<NPC>;
     //private npcsAdded : Array<NPCWatcher>;
     public npcsAdded : Array<NPCWatcher>;
+
+    private emulator : any = null;;
 
     constructor()
     {
         super();
-        this.npcsToAdd = [];
         this.npcsAdded = [];
         (<any>window).GBPluginScheduler.GetInstance().registerPluginRun(this);        
     }
 
     public run(emulator : any) : void 
     {
+        this.emulator = emulator;
         if(this.canRun() == false)
             return;
 
@@ -181,26 +182,24 @@ class GBPluginNPCInjector extends GBPlugin
         {
             if(this.npcsAdded[i].update() == false)
             {
-                if(this.npcsAdded[i].mustDelete == false)
-                    this.npcsToAdd.push(this.npcsAdded[i].npc);
+                //if(this.npcsAdded[i].mustDelete == false)
+                //this.registerNPC(this.npcsAdded[i].npc);
                 this.npcsAdded.splice(i, 1);
             }
             else 
                 i++;
         }
-        
-        if(this.npcsToAdd.length <= 0)
-            return;
-        let freeSlot = this.searchFreeNPCSlot(emulator);
-        if(freeSlot == null)
-            return;
-        this.addNPC(emulator, freeSlot, this.npcsToAdd.shift());
-        
+    
     }
 
     public registerNPC(npc : NPC)
     {
-        this.npcsToAdd.push(npc);
+        if(this.emulator == null)
+            return;
+        let freeSlot = this.searchFreeNPCSlot(this.emulator);
+        if(freeSlot == null)
+            return;
+        this.addNPC(this.emulator, freeSlot, npc);
     }
 
     private searchFreeNPCSlot(emulator : any) : number 

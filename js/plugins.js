@@ -196,32 +196,33 @@ var GBPluginNPCInjector = /** @class */ (function (_super) {
     __extends(GBPluginNPCInjector, _super);
     function GBPluginNPCInjector() {
         var _this = _super.call(this) || this;
-        _this.npcsToAdd = [];
+        _this.emulator = null;
         _this.npcsAdded = [];
         window.GBPluginScheduler.GetInstance().registerPluginRun(_this);
         return _this;
     }
+    ;
     GBPluginNPCInjector.prototype.run = function (emulator) {
+        this.emulator = emulator;
         if (this.canRun() == false)
             return;
         for (var i = 0; i < this.npcsAdded.length;) {
             if (this.npcsAdded[i].update() == false) {
-                if (this.npcsAdded[i].mustDelete == false)
-                    this.npcsToAdd.push(this.npcsAdded[i].npc);
+                //if(this.npcsAdded[i].mustDelete == false)
+                //this.registerNPC(this.npcsAdded[i].npc);
                 this.npcsAdded.splice(i, 1);
             }
             else
                 i++;
         }
-        if (this.npcsToAdd.length <= 0)
-            return;
-        var freeSlot = this.searchFreeNPCSlot(emulator);
-        if (freeSlot == null)
-            return;
-        this.addNPC(emulator, freeSlot, this.npcsToAdd.shift());
     };
     GBPluginNPCInjector.prototype.registerNPC = function (npc) {
-        this.npcsToAdd.push(npc);
+        if (this.emulator == null)
+            return;
+        var freeSlot = this.searchFreeNPCSlot(this.emulator);
+        if (freeSlot == null)
+            return;
+        this.addNPC(this.emulator, freeSlot, npc);
     };
     GBPluginNPCInjector.prototype.searchFreeNPCSlot = function (emulator) {
         var current = GBPluginNPCInjector.NPCBLOCKSTART;
@@ -406,6 +407,7 @@ var GBPluginPlayerReceiver = /** @class */ (function (_super) {
         }
     };
     GBPluginPlayerReceiver.prototype.run = function (emulator) {
+        this.emulator = emulator;
         if (this.canRun() == false)
             return;
         if (this.connected == false) {
@@ -417,7 +419,6 @@ var GBPluginPlayerReceiver = /** @class */ (function (_super) {
         player.MAP_INDEX = this.emulator.memoryRead(0xDCB6);
         player.MAP_BANK = this.emulator.memoryRead(0xDCB5);
         this.channel.send(JSON.stringify(player));
-        this.emulator = emulator;
     };
     return GBPluginPlayerReceiver;
 }(GBPlugin));
@@ -538,6 +539,7 @@ var GBPluginPlayerSender = /** @class */ (function (_super) {
         }
     };
     GBPluginPlayerSender.prototype.run = function (emulator) {
+        this.emulator = emulator;
         if (this.canRun() == false)
             return;
         if (this.connected == false) {
@@ -549,7 +551,6 @@ var GBPluginPlayerSender = /** @class */ (function (_super) {
         player.MAP_INDEX = this.emulator.memoryRead(0xDCB6);
         player.MAP_BANK = this.emulator.memoryRead(0xDCB5);
         this.channel.send(JSON.stringify(player));
-        this.emulator = emulator;
     };
     return GBPluginPlayerSender;
 }(GBPlugin));
