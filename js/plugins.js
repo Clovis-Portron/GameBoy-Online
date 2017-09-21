@@ -304,13 +304,34 @@ var GBPluginPlayerSender = /** @class */ (function (_super) {
         var _this = _super.call(this) || this;
         window.GBPluginScheduler.GetInstance().registerPluginRun(_this);
         var conf = {};
-        _this.socket = new RTCPeerConnection(null);
-        _this.socket.onicecandidate = function (evt) {
-            console.log(evt);
+        _this.connection = new RTCPeerConnection(null);
+        _this.dataChannel = _this.connection.createDataChannel("SendTrainer");
+        _this.connection.onicecandidate = function (evt) {
+            this.dataChannel.send(JSON.stringify({ "candidate": evt.candidate }));
+        };
+        _this.dataChannel.onerror = function (error) {
+            console.log("Data Channel Error:", error);
+        };
+        _this.dataChannel.onmessage = function (event) {
+            console.log("Got Data Channel Message:", event.data);
+        };
+        _this.dataChannel.onopen = function () {
+            _this.dataChannel.send("Hello World!");
+        };
+        _this.dataChannel.onclose = function () {
+            console.log("The Data Channel is Closed");
         };
         console.log("STARTING NETWORK");
         return _this;
     }
+    GBPluginPlayerSender.prototype.onError = function () {
+    };
+    GBPluginPlayerSender.prototype.onOpen = function () {
+    };
+    GBPluginPlayerSender.prototype.onClose = function () {
+    };
+    GBPluginPlayerSender.prototype.onMessage = function () {
+    };
     GBPluginPlayerSender.prototype.run = function (emulator) {
         if (this.canRun() == false)
             return;
