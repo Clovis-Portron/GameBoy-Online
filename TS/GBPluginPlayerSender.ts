@@ -71,6 +71,15 @@ class GBPluginPlayerSender extends GBPlugin
     private onMessage(e)
     {
         console.log(JSON.parse(e.data));
+        let player : NPC = JSON.parse(e.data);
+        if((<any>window).NPCInjector.npcsAdded.length <= 0)
+        {
+            (<any>window).NPCInjector.registerNPC(player);
+        }
+        else 
+        {
+            (<any>window).NPCInjector.npcsAdded[0].reset(player);
+        }
         
     }
 

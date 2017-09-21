@@ -47,7 +47,7 @@ class NPCWatcher
     };
 
     public npc : NPC;
-    private mustUpdate = false;
+    public mustUpdate = false;
     private slot : number;
     private emulator : any;
     private valuesToUpdate : Array<boolean> = [];
@@ -112,6 +112,13 @@ class NPCWatcher
             break;
 
         }
+    }
+
+    public reset(npc : NPC)
+    {
+        this.npc = npc;
+        this.mustUpdate = true;
+        this.created = false;
     }
 
     public update()
@@ -213,28 +220,4 @@ class GBPluginNPCInjector extends GBPlugin
 }
 
 // Injection
-let hh = new GBPluginNPCInjector();
-(<any>window).NPC = NPC;
-(<any>window).INPC = new NPC();
-(<any>window).injectNPC = function(npc)
-{
-    hh.registerNPC(npc);
-};
-
-(<any>window).testNPC = function(even)
-{
-	
-    hh.npcsAdded[0].set("OBJECT_MOVEMENTTYPE",0xB);
-    hh.npcsAdded[0].set("OBJECT_DIRECTION_WALKING",0x01);
-    hh.npcsAdded[0].set("OBJECT_STEP_DURATION",16);
-    hh.npcsAdded[0].set("OBJECT_FACING",4);
-    hh.npcsAdded[0].set("OBJECT_NEXT_MAP_X",hh.npcsAdded[0].npc.OBJECT_MAP_X);
-    hh.npcsAdded[0].set("OBJECT_NEXT_MAP_Y",hh.npcsAdded[0].npc.OBJECT_MAP_Y - 1);
-    hh.npcsAdded[0].set("OBJECT_NEXT_TILE",0);
-    hh.npcsAdded[0].set("OBJECT_ACTION",2);
-    hh.npcsAdded[0].set("OBJECT_STEP_TYPE",7);
-    hh.npcsAdded[0].set("OBJECT_PALETTE",3);
-	
-	//chercher le comportement inoffensif
-    hh.npcsAdded[0].set("OBJECT_MAP_OBJECT_INDEX", even);
-};
+(<any>window).NPCInjector = new GBPluginNPCInjector();

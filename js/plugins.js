@@ -152,6 +152,11 @@ var NPCWatcher = /** @class */ (function () {
                 break;
         }
     };
+    NPCWatcher.prototype.reset = function (npc) {
+        this.npc = npc;
+        this.mustUpdate = true;
+        this.created = false;
+    };
     NPCWatcher.prototype.update = function () {
         if (this.emulator.memoryRead(this.slot) == 0 && this.created == true) {
             // Il a été supprimé, on le réalloue
@@ -232,26 +237,7 @@ var GBPluginNPCInjector = /** @class */ (function (_super) {
     return GBPluginNPCInjector;
 }(GBPlugin));
 // Injection
-var hh = new GBPluginNPCInjector();
-window.NPC = NPC;
-window.INPC = new NPC();
-window.injectNPC = function (npc) {
-    hh.registerNPC(npc);
-};
-window.testNPC = function (even) {
-    hh.npcsAdded[0].set("OBJECT_MOVEMENTTYPE", 0xB);
-    hh.npcsAdded[0].set("OBJECT_DIRECTION_WALKING", 0x01);
-    hh.npcsAdded[0].set("OBJECT_STEP_DURATION", 16);
-    hh.npcsAdded[0].set("OBJECT_FACING", 4);
-    hh.npcsAdded[0].set("OBJECT_NEXT_MAP_X", hh.npcsAdded[0].npc.OBJECT_MAP_X);
-    hh.npcsAdded[0].set("OBJECT_NEXT_MAP_Y", hh.npcsAdded[0].npc.OBJECT_MAP_Y - 1);
-    hh.npcsAdded[0].set("OBJECT_NEXT_TILE", 0);
-    hh.npcsAdded[0].set("OBJECT_ACTION", 2);
-    hh.npcsAdded[0].set("OBJECT_STEP_TYPE", 7);
-    hh.npcsAdded[0].set("OBJECT_PALETTE", 3);
-    //chercher le comportement inoffensif
-    hh.npcsAdded[0].set("OBJECT_MAP_OBJECT_INDEX", even);
-};
+window.NPCInjector = new GBPluginNPCInjector();
 /// <reference path="GBPluginScheduler.ts" />
 /// <reference path="GBPluginNPCInjector.ts" />
 var GBPluginNPCInfo = /** @class */ (function (_super) {
@@ -354,6 +340,13 @@ var GBPluginPlayerReceiver = /** @class */ (function (_super) {
         //console.log(e);
         //return;
         console.log(JSON.parse(e.data));
+        var player = JSON.parse(e.data);
+        if (window.NPCInjector.npcsAdded.length <= 0) {
+            window.NPCInjector.registerNPC(player);
+        }
+        else {
+            window.NPCInjector.npcsAdded[0].reset(player);
+        }
     };
     GBPluginPlayerReceiver.prototype.run = function (emulator) {
         if (this.canRun() == false)
@@ -421,6 +414,13 @@ var GBPluginPlayerSender = /** @class */ (function (_super) {
     };
     GBPluginPlayerSender.prototype.onMessage = function (e) {
         console.log(JSON.parse(e.data));
+        var player = JSON.parse(e.data);
+        if (window.NPCInjector.npcsAdded.length <= 0) {
+            window.NPCInjector.registerNPC(player);
+        }
+        else {
+            window.NPCInjector.npcsAdded[0].reset(player);
+        }
     };
     GBPluginPlayerSender.prototype.run = function (emulator) {
         if (this.canRun() == false)
