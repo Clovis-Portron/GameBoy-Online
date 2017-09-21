@@ -116,6 +116,41 @@ var NPCWatcher = /** @class */ (function () {
         this.valuesToUpdate[property] = true;
         this.mustUpdate = true;
     };
+    NPCWatcher.prototype.walk = function (direction) {
+        this.set("OBJECT_MOVEMENTTYPE", 0x0b);
+        this.set("OBJECT_STEP_DURATION", 16);
+        this.set("OBJECT_NEXT_TILE", 0);
+        this.set("OBJECT_ACTION", 2);
+        this.set("OBJECT_STEP_TYPE", 7);
+        this.set("OBJECT_MAP_OBJECT_INDEX", 0x03);
+        this.set("OBJECT_RADIUS", 0);
+        switch (direction) {
+            case NPCWatcher.DIRECTION.UP:
+                this.set("OBJECT_DIRECTION_WALKING", 1);
+                this.set("OBJECT_FACING", 4);
+                this.set("OBJECT_NEXT_MAP_X", this.npc.OBJECT_MAP_X);
+                this.set("OBJECT_NEXT_MAP_Y", this.npc.OBJECT_MAP_Y - 1);
+                break;
+            case NPCWatcher.DIRECTION.DOWN:
+                this.set("OBJECT_DIRECTION_WALKING", 0);
+                this.set("OBJECT_FACING", 0);
+                this.set("OBJECT_NEXT_MAP_X", this.npc.OBJECT_MAP_X);
+                this.set("OBJECT_NEXT_MAP_Y", this.npc.OBJECT_MAP_Y + 1);
+                break;
+            case NPCWatcher.DIRECTION.LEFT:
+                this.set("OBJECT_DIRECTION_WALKING", 2);
+                this.set("OBJECT_FACING", 8);
+                this.set("OBJECT_NEXT_MAP_X", this.npc.OBJECT_MAP_X - 1);
+                this.set("OBJECT_NEXT_MAP_Y", this.npc.OBJECT_MAP_Y);
+                break;
+            case NPCWatcher.DIRECTION.RIGHT:
+                this.set("OBJECT_DIRECTION_WALKING", 3);
+                this.set("OBJECT_FACING", 0x0C);
+                this.set("OBJECT_NEXT_MAP_X", this.npc.OBJECT_MAP_X + 1);
+                this.set("OBJECT_NEXT_MAP_Y", this.npc.OBJECT_MAP_Y);
+                break;
+        }
+    };
     NPCWatcher.prototype.update = function () {
         if (this.emulator.memoryRead(this.slot) == 0 && this.created == true) {
             // Il a été supprimé, on le réalloue
@@ -127,18 +162,23 @@ var NPCWatcher = /** @class */ (function () {
             return true;
         var cell = this.slot;
         for (var i = 0; i < Object.keys(this.npc).length; i++) {
-            /*if(this.valuesToUpdate[Object.keys(this.npc)[i]] == true)
-            {
+            if (this.valuesToUpdate[Object.keys(this.npc)[i]] == true) {
                 this.emulator.memoryWrite(cell, this.npc[Object.keys(this.npc)[i]]);
                 this.valuesToUpdate[Object.keys(this.npc)[i]] = false;
             }
             else
-                this.npc[Object.keys(this.npc)[i]] = this.emulator.memoryRead(cell);*/
+                this.npc[Object.keys(this.npc)[i]] = this.emulator.memoryRead(cell);
             this.emulator.memoryWrite(cell, this.npc[Object.keys(this.npc)[i]]);
             cell = cell + 0x01;
         }
         this.mustUpdate = false;
         return true;
+    };
+    NPCWatcher.DIRECTION = {
+        "UP": 0,
+        "DOWN": 1,
+        "LEFT": 2,
+        "RIGHT": 3
     };
     return NPCWatcher;
 }());
@@ -155,7 +195,7 @@ var GBPluginNPCInjector = /** @class */ (function (_super) {
             return;
         for (var i = 0; i < this.npcsAdded.length;) {
             if (this.npcsAdded[i].update() == false) {
-                //this.npcsToAdd.push(this.npcsAdded[i].npc);
+                this.npcsToAdd.push(this.npcsAdded[i].npc);
                 this.npcsAdded.splice(i, 1);
             }
             else
@@ -208,7 +248,6 @@ window.testNPC = function (type) {
     hh.npcsAdded[0].set("OBJECT_ACTION", 2);
     hh.npcsAdded[0].set("OBJECT_STEP_TYPE", 7);
     hh.npcsAdded[0].set("OBJECT_MAP_OBJECT_INDEX", 0x03);
-    hh.npcsAdded[0].set("OBJECT_FLAGS1", 0x0C);
 };
 /// <reference path="GBPluginScheduler.ts" />
 /// <reference path="GBPluginNPCInjector.ts" />
