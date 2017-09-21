@@ -170,8 +170,8 @@ var NPCWatcher = /** @class */ (function () {
             this.created = true;
         if (this.mustUpdate == false)
             return true;
-        this.npc.MAP_INDEX = this.emulator.memoryRead(0xDA01);
-        this.npc.MAP_BANK = this.emulator.memoryRead(0xDA01);
+        this.npc.MAP_INDEX = this.emulator.memoryRead(0xDCB6);
+        this.npc.MAP_BANK = this.emulator.memoryRead(0xDCB5);
         this.valuesToUpdate["MAP_INDEX"] = true;
         this.valuesToUpdate["MAP_BANK"] = true;
         var cell = this.slot;
@@ -354,8 +354,8 @@ var GBPluginPlayerReceiver = /** @class */ (function (_super) {
             return;
         if (this.emulator == null)
             return;
-        var mapIndex = this.emulator.memoryRead(0xDA01);
-        var mapBank = this.emulator.memoryRead(0xDA00);
+        var mapIndex = this.emulator.memoryRead(0xDCB6);
+        var mapBank = this.emulator.memoryRead(0xDCB5);
         var clone = null;
         if (window.NPCInjector.npcsAdded.length <= 0) {
             if (other.MAP_INDEX != mapIndex || other.MAP_BANK != mapBank)
@@ -484,8 +484,8 @@ var GBPluginPlayerSender = /** @class */ (function (_super) {
             return;
         if (this.emulator == null)
             return;
-        var mapIndex = this.emulator.memoryRead(0xDA01);
-        var mapBank = this.emulator.memoryRead(0xDA00);
+        var mapIndex = this.emulator.memoryRead(0xDCB6);
+        var mapBank = this.emulator.memoryRead(0xDCB5);
         var clone = null;
         if (window.NPCInjector.npcsAdded.length <= 0) {
             if (other.MAP_INDEX != mapIndex || other.MAP_BANK != mapBank)

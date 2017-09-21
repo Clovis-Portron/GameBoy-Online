@@ -86,8 +86,8 @@ class GBPluginPlayerReceiver extends GBPlugin
 		
 		if(this.emulator == null) return;
 
-		var mapIndex = this.emulator.memoryRead(0xDA01);
-		var mapBank = this.emulator.memoryRead(0xDA00);					
+		var mapIndex = this.emulator.memoryRead(0xDCB6);
+		var mapBank = this.emulator.memoryRead(0xDCB5);						
 		
         let clone : NPC = null;
         if((<any>window).NPCInjector.npcsAdded.length <= 0)
