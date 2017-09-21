@@ -130,6 +130,8 @@ class GBPluginPlayerReceiver extends GBPlugin
             }
             else 
             {
+                if(clone.OBJECT_DIRECTION_WALKING != 0xFF)
+                    return;
                 if(other.OBJECT_MAP_X > clone.OBJECT_MAP_X)
                 {
                     (<any>window).NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.RIGHT);
