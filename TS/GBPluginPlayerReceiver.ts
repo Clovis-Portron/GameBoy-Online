@@ -157,6 +157,7 @@ class GBPluginPlayerReceiver extends GBPlugin
 
     public run(emulator : any) : void 
     {
+		this.emulator = emulator;        
         if(this.canRun() == false)
             return;
         if(this.connected == false)
@@ -169,7 +170,6 @@ class GBPluginPlayerReceiver extends GBPlugin
         player.MAP_INDEX = this.emulator.memoryRead(0xDCB6);
         player.MAP_BANK = this.emulator.memoryRead(0xDCB5);        
         this.channel.send(JSON.stringify(player));
-		this.emulator = emulator;
     }
 }
 
