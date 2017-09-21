@@ -72,14 +72,35 @@ class GBPluginPlayerSender extends GBPlugin
     private onMessage(e)
     {
         //console.log(JSON.parse(e.data));
-        let player : NPC = JSON.parse(e.data);
+        let other : NPC = JSON.parse(e.data);
+        if((<any>window).NPCInfo.npcs.length < 1)
+            return;
+        let clone : NPC = null;
         if((<any>window).NPCInjector.npcsAdded.length <= 0)
         {
-            this.other = (<any>window).NPCInjector.registerNPC(player);
+            clone = (<any>window).NPCInfo.npcs[0];
+            clone.OBJECT_MAP_X = other.OBJECT_MAP_X;
+            clone.OBJECT_MAP_Y = other.OBJECT_MAP_Y;
+            clone.OBJECT_NEXT_MAP_X = other.OBJECT_NEXT_MAP_X;
+            clone.OBJECT_NEXT_MAP_Y = other.OBJECT_NEXT_MAP_Y;
+            clone.OBJECT_PALETTE = 2;
+            clone.OBJECT_SPRITE_X = other.OBJECT_SPRITE_X;
+            clone.OBJECT_SPRITE_Y = other.OBJECT_SPRITE_Y;
+            clone.OBJECT_FACING = other.OBJECT_FACING;
+            (<any>window).NPCInjector.registerNPC(clone);
         }
         else 
         {
-            (<any>window).NPCInjector.npcsAdded[0].reset(player);
+            clone = (<any>window).NPCInjector.npcsAdded[0].npc;
+            clone.OBJECT_MAP_X = other.OBJECT_MAP_X;
+            clone.OBJECT_MAP_Y = other.OBJECT_MAP_Y;
+            clone.OBJECT_NEXT_MAP_X = other.OBJECT_NEXT_MAP_X;
+            clone.OBJECT_NEXT_MAP_Y = other.OBJECT_NEXT_MAP_Y;
+            clone.OBJECT_PALETTE = 2;
+            clone.OBJECT_SPRITE_X = other.OBJECT_SPRITE_X;
+            clone.OBJECT_SPRITE_Y = other.OBJECT_SPRITE_Y;
+            clone.OBJECT_FACING = other.OBJECT_FACING;
+            (<any>window).NPCInjector.npcsAdded[0].reset(clone);
         }
         
     }
