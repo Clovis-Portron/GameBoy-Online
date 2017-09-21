@@ -138,8 +138,8 @@ class NPCWatcher
         if(this.mustUpdate == false)
             return true;
 		
-		this.npc.MAP_INDEX = this.memoryRead(0xDA01);
-		this.npc.MAP_BANK = this.memoryRead(0xDA01);
+		this.npc.MAP_INDEX = this.emulator.memoryRead(0xDA01);
+		this.npc.MAP_BANK = this.emulator.memoryRead(0xDA01);
 		
 		this.valuesToUpdate["MAP_INDEX"] = true;
 		this.valuesToUpdate["MAP_BANK"] = true;

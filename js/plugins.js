@@ -91,8 +91,8 @@ var NPC = /** @class */ (function () {
         this.OBJECT_SPRITE_X_OFFSET = 0;
         this.OBJECT_SPRITE_Y_OFFSET = 0;
         this.OBJECT_MOVEMENT_BYTE_INDEX = 0;
-        this.u1 = 0;
-        this.u2 = 0;
+        this.MAP_INDEX = 0; // Pas utilisé à l'origine
+        this.MAP_BANK = 0; // Pas utilisé à l'origine
         this.u3 = 0;
         this.u4 = 0;
         this.OBJECT_RANGE = 0;
@@ -170,6 +170,10 @@ var NPCWatcher = /** @class */ (function () {
             this.created = true;
         if (this.mustUpdate == false)
             return true;
+        this.npc.MAP_INDEX = this.emulator.memoryRead(0xDA01);
+        this.npc.MAP_BANK = this.emulator.memoryRead(0xDA01);
+        this.valuesToUpdate["MAP_INDEX"] = true;
+        this.valuesToUpdate["MAP_BANK"] = true;
         var cell = this.slot;
         for (var i = 0; i < Object.keys(this.npc).length; i++) {
             if (this.valuesToUpdate[Object.keys(this.npc)[i]] == true) {
