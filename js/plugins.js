@@ -295,6 +295,7 @@ var GBPluginPlayerReceiver = /** @class */ (function (_super) {
     function GBPluginPlayerReceiver() {
         var _this = _super.call(this) || this;
         _this.connected = false;
+        _this.emulator = null;
         _this.counterInterval = 10;
         window.GBPluginScheduler.GetInstance().registerPluginRun(_this);
         _this.iceCandidates = [];
@@ -351,8 +352,14 @@ var GBPluginPlayerReceiver = /** @class */ (function (_super) {
         var other = JSON.parse(e.data);
         if (window.NPCInfo.npcs.length < 1)
             return;
+        if (this.emulator == null)
+            return;
+        var mapIndex = this.emulator.memoryRead(0xDA01);
+        var mapBank = this.emulator.memoryRead(0xDA00);
         var clone = null;
         if (window.NPCInjector.npcsAdded.length <= 0) {
+            if (other.MAP_INDEX != mapIndex || other.MAP_BANK != mapBank)
+                return;
             clone = window.NPCInfo.npcs[0];
             clone.OBJECT_MAP_X = other.OBJECT_MAP_X;
             clone.OBJECT_MAP_Y = other.OBJECT_MAP_Y;
@@ -367,6 +374,10 @@ var GBPluginPlayerReceiver = /** @class */ (function (_super) {
         }
         else {
             clone = window.NPCInjector.npcsAdded[0].npc;
+            if (other.MAP_INDEX != mapIndex || other.MAP_BANK != mapBank) {
+                window.NPCInjector.npcsAdded[0].mustDelete = true;
+                return;
+            }
             // Si trop loin pour marcher, on TP
             if (Math.abs(other.OBJECT_MAP_X - clone.OBJECT_MAP_X) > 2 || Math.abs(other.OBJECT_MAP_Y - clone.OBJECT_MAP_Y) > 2) {
                 clone.OBJECT_MAP_X = other.OBJECT_MAP_X;
@@ -406,6 +417,7 @@ var GBPluginPlayerReceiver = /** @class */ (function (_super) {
             return;
         var player = window.NPCInfo.npcs[0];
         this.channel.send(JSON.stringify(player));
+        this.emulator = emulator;
     };
     return GBPluginPlayerReceiver;
 }(GBPlugin));
@@ -418,6 +430,7 @@ var GBPluginPlayerSender = /** @class */ (function (_super) {
         var _this = _super.call(this) || this;
         _this.connected = false;
         _this.other = null;
+        _this.emulator = null;
         _this.counterInterval = 10;
         window.GBPluginScheduler.GetInstance().registerPluginRun(_this);
         _this.iceCandidates = [];
@@ -467,8 +480,14 @@ var GBPluginPlayerSender = /** @class */ (function (_super) {
         var other = JSON.parse(e.data);
         if (window.NPCInfo.npcs.length < 1)
             return;
+        if (this.emulator == null)
+            return;
+        var mapIndex = this.emulator.memoryRead(0xDA01);
+        var mapBank = this.emulator.memoryRead(0xDA00);
         var clone = null;
         if (window.NPCInjector.npcsAdded.length <= 0) {
+            if (other.MAP_INDEX != mapIndex || other.MAP_BANK != mapBank)
+                return;
             clone = window.NPCInfo.npcs[0];
             clone.OBJECT_MAP_X = other.OBJECT_MAP_X;
             clone.OBJECT_MAP_Y = other.OBJECT_MAP_Y;
@@ -483,6 +502,10 @@ var GBPluginPlayerSender = /** @class */ (function (_super) {
         }
         else {
             clone = window.NPCInjector.npcsAdded[0].npc;
+            if (other.MAP_INDEX != mapIndex || other.MAP_BANK != mapBank) {
+                window.NPCInjector.npcsAdded[0].mustDelete = true;
+                return;
+            }
             // Si trop loin pour marcher, on TP
             if (Math.abs(other.OBJECT_MAP_X - clone.OBJECT_MAP_X) > 2 || Math.abs(other.OBJECT_MAP_Y - clone.OBJECT_MAP_Y) > 2) {
                 clone.OBJECT_MAP_X = other.OBJECT_MAP_X;
@@ -522,6 +545,7 @@ var GBPluginPlayerSender = /** @class */ (function (_super) {
             return;
         var player = window.NPCInfo.npcs[0];
         this.channel.send(JSON.stringify(player));
+        this.emulator = emulator;
     };
     return GBPluginPlayerSender;
 }(GBPlugin));

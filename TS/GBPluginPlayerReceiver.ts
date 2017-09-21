@@ -7,6 +7,7 @@ class GBPluginPlayerReceiver extends GBPlugin
     private channel : any;
     private iceCandidates : Array<RTCIceCandidate>;
     private connected :  boolean = false;
+	private emulator : any = null;
 
     constructor()
     {
@@ -82,9 +83,16 @@ class GBPluginPlayerReceiver extends GBPlugin
         let other : NPC = JSON.parse(e.data);
         if((<any>window).NPCInfo.npcs.length < 1)
             return;
+		
+		if(this.emulator == null) return;
+
+		var mapIndex = this.emulator.memoryRead(0xDA01);
+		var mapBank = this.emulator.memoryRead(0xDA00);					
+		
         let clone : NPC = null;
         if((<any>window).NPCInjector.npcsAdded.length <= 0)
         {
+			if(other.MAP_INDEX != mapIndex || other.MAP_BANK != mapBank) return;
             clone = (<any>window).NPCInfo.npcs[0];
             clone.OBJECT_MAP_X = other.OBJECT_MAP_X;
             clone.OBJECT_MAP_Y = other.OBJECT_MAP_Y;
@@ -100,6 +108,12 @@ class GBPluginPlayerReceiver extends GBPlugin
         else 
         {
             clone = (<any>window).NPCInjector.npcsAdded[0].npc;
+			if(other.MAP_INDEX != mapIndex || other.MAP_BANK != mapBank)
+			{
+				(<any>window).NPCInjector.npcsAdded[0].mustDelete = true;
+				return;
+			}
+			
             // Si trop loin pour marcher, on TP
             if(Math.abs(other.OBJECT_MAP_X - clone.OBJECT_MAP_X) > 2 || Math.abs(other.OBJECT_MAP_Y - clone.OBJECT_MAP_Y) > 2)
             {
@@ -151,6 +165,7 @@ class GBPluginPlayerReceiver extends GBPlugin
             return;
         let player : NPC = (<any>window).NPCInfo.npcs[0];
         this.channel.send(JSON.stringify(player));
+		this.emulator = emulator;
     }
 }
 
