@@ -23,5 +23,9 @@
     "@types/webrtc": "0.0.21",
     "browserify": "^14.4.0",
     "typescript": "^2.5.2"
+  },
+  "dependencies": {
+    "datachannel": "^1.0.0",
+    "firebase": "^4.3.1"
   }
 }

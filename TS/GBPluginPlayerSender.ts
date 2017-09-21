@@ -3,60 +3,60 @@
 
 class GBPluginPlayerSender extends GBPlugin
 {
-    private connection : any;
-    private dataChannel : any;
+    private connection : RTCPeerConnection;
+    private channel : any;
+    private iceCandidates : Array<RTCIceCandidate>;
 
     constructor()
     {
         super();
         (<any>window).GBPluginScheduler.GetInstance().registerPluginRun(this);
-        let conf : RTCConfiguration = {
+        this.iceCandidates = [];
+        this.connection = new RTCPeerConnection({
+            "iceServers": [{
+                "urls" : "stun:stun.l.google.com:19302",
+            }]
+        });
+        this.connection.onicecandidate = (event) => {this.OnIceCandidate(event)};
+        this.channel = this.connection.createDataChannel('PlayerExchange', {
+        });
+        this.channel.onmessage = (e) => { this.onMessage(e); };
+        this.channel.onopen = (e) => { this.onOpen(e); };
+        this.channel.onclose =(e) => { this.onClose(e); };
+        this.connection.createOffer().then((offer) => { 
+            this.connection.setLocalDescription(offer);
+            console.log('window.Client.receiveOffer(new RTCSessionDescription(JSON.parse(\'' + JSON.stringify(offer).replace(/\\/g, "\\\\") + '\')));')
+        }).catch(function(error){ 
 
-        };
-        this.connection = new RTCPeerConnection(null);
-        this.dataChannel = this.connection.createDataChannel("SendTrainer");
-
-        this.connection.onicecandidate = function (evt) {
-            this.dataChannel.send(JSON.stringify({ "candidate": evt.candidate }));
-        };
-
-        this.dataChannel.onerror = function (error) {
-            console.log("Data Channel Error:", error);
-          };
-          
-          this.dataChannel.onmessage = function (event) {
-            console.log("Got Data Channel Message:", event.data);
-          };
-          
-          this.dataChannel.onopen = () => {
-            this.dataChannel.send("Hello World!");
-          };
-          
-          this.dataChannel.onclose = function () {
-            console.log("The Data Channel is Closed");
-          };
-
-
+        });
         console.log("STARTING NETWORK");
     }
 
-
-    private onError()
+    private OnIceCandidate(event)
     {
-
+        if (event.candidate) {
+            this.iceCandidates.push(event.candidate);
+        }
     }
 
-    private onOpen()
+    private onOpen(e)
     {
-
+        console.log("New Connection");
     }
 
-    private onClose()
+    private onClose(e)
     {
-
+        console.log("Close Connection");
+        
     }
 
-    private onMessage()
+
+    private onError(e)
+    {
+        console.log(e);
+    }
+
+    private onMessage(e)
     {
 
     }
@@ -71,4 +71,4 @@ class GBPluginPlayerSender extends GBPlugin
     }
 }
 
-new GBPluginPlayerSender();
+(<any>window).Server = new GBPluginPlayerSender();
