@@ -126,6 +126,16 @@ class NPCWatcher
         }
     }
 
+    public free()
+    {
+        let cell = this.slot;        
+        for(let i = 0; i < Object.keys(this.npc).length; i++)
+        {
+            this.emulator.memoryWrite(cell, 0);
+            cell = cell + 0x01;    
+        }   
+    }
+
     public update()
     {
         if((this.emulator.memoryRead(this.slot) == 0 && this.created == true) || this.mustDelete)
@@ -184,6 +194,7 @@ class GBPluginNPCInjector extends GBPlugin
             {
                 //if(this.npcsAdded[i].mustDelete == false)
                 //this.registerNPC(this.npcsAdded[i].npc);
+                this.npcsAdded[i].free();
                 this.npcsAdded.splice(i, 1);
             }
             else 
