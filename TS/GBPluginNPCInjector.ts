@@ -138,12 +138,6 @@ class NPCWatcher
         if(this.mustUpdate == false)
             return true;
 		
-		this.npc.MAP_INDEX = this.emulator.memoryRead(0xDCB6);
-		this.npc.MAP_BANK = this.emulator.memoryRead(0xDCB5);
-		
-		this.valuesToUpdate["MAP_INDEX"] = true;
-		this.valuesToUpdate["MAP_BANK"] = true;
-		
         let cell = this.slot;        
         for(let i = 0; i < Object.keys(this.npc).length; i++)
         {

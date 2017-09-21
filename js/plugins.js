@@ -170,10 +170,6 @@ var NPCWatcher = /** @class */ (function () {
             this.created = true;
         if (this.mustUpdate == false)
             return true;
-        this.npc.MAP_INDEX = this.emulator.memoryRead(0xDCB6);
-        this.npc.MAP_BANK = this.emulator.memoryRead(0xDCB5);
-        this.valuesToUpdate["MAP_INDEX"] = true;
-        this.valuesToUpdate["MAP_BANK"] = true;
         var cell = this.slot;
         for (var i = 0; i < Object.keys(this.npc).length; i++) {
             if (this.valuesToUpdate[Object.keys(this.npc)[i]] == true) {
@@ -418,6 +414,8 @@ var GBPluginPlayerReceiver = /** @class */ (function (_super) {
         if (window.NPCInfo.npcs <= 0)
             return;
         var player = window.NPCInfo.npcs[0];
+        player.MAP_INDEX = this.emulator.memoryRead(0xDCB6);
+        player.MAP_BANK = this.emulator.memoryRead(0xDCB5);
         this.channel.send(JSON.stringify(player));
         this.emulator = emulator;
     };
@@ -548,6 +546,8 @@ var GBPluginPlayerSender = /** @class */ (function (_super) {
         if (window.NPCInfo.npcs <= 0)
             return;
         var player = window.NPCInfo.npcs[0];
+        player.MAP_INDEX = this.emulator.memoryRead(0xDCB6);
+        player.MAP_BANK = this.emulator.memoryRead(0xDCB5);
         this.channel.send(JSON.stringify(player));
         this.emulator = emulator;
     };
