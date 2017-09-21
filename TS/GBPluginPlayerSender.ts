@@ -158,6 +158,8 @@ class GBPluginPlayerSender extends GBPlugin
         if((<any>window).NPCInfo.npcs <= 0)
             return;
         let player : NPC = (<any>window).NPCInfo.npcs[0];
+        player.MAP_INDEX = this.emulator.memoryRead(0xDCB6);
+        player.MAP_BANK = this.emulator.memoryRead(0xDCB5); 
         this.channel.send(JSON.stringify(player));
 		this.emulator = emulator;
     }
