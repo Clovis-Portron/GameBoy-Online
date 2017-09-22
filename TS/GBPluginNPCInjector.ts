@@ -73,6 +73,15 @@ class NPCWatcher
         this.mustUpdate = true;
     }
 
+    public stop()
+    {
+        this.set("OBJECT_STEP_FRAME",0);
+        this.set("OBJECT_MOVEMENT_BYTE_INDEX", 0);
+        this.set("OBJECT_DIRECTION_WALKING",0xFF);        
+        this.set("OBJECT_STEP_TYPE",0x03);   
+        this.set("OBJECT_STEP_DURATION",0);
+    }
+
     public walk(direction : number)
     {
         this.set("OBJECT_MOVEMENTTYPE",0x00);
@@ -176,6 +185,7 @@ class GBPluginNPCInjector extends GBPlugin
     constructor()
     {
         super();
+        this.counterInterval = 9;
         this.npcsAdded = [];
         (<any>window).GBPluginScheduler.GetInstance().registerPluginRun(this);        
     }

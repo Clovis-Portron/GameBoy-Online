@@ -118,6 +118,13 @@ var NPCWatcher = /** @class */ (function () {
         this.valuesToUpdate[property] = true;
         this.mustUpdate = true;
     };
+    NPCWatcher.prototype.stop = function () {
+        this.set("OBJECT_STEP_FRAME", 0);
+        this.set("OBJECT_MOVEMENT_BYTE_INDEX", 0);
+        this.set("OBJECT_DIRECTION_WALKING", 0xFF);
+        this.set("OBJECT_STEP_TYPE", 0x03);
+        this.set("OBJECT_STEP_DURATION", 0);
+    };
     NPCWatcher.prototype.walk = function (direction) {
         this.set("OBJECT_MOVEMENTTYPE", 0x00);
         this.set("OBJECT_STEP_DURATION", 16);
@@ -175,8 +182,6 @@ var NPCWatcher = /** @class */ (function () {
         }
         if (this.created == false)
             this.created = true;
-        if (this.mustUpdate == false)
-            return true;
         var cell = this.slot;
         for (var i = 0; i < Object.keys(this.npc).length; i++) {
             if (this.valuesToUpdate[Object.keys(this.npc)[i]] == true) {
@@ -204,6 +209,7 @@ var GBPluginNPCInjector = /** @class */ (function (_super) {
     function GBPluginNPCInjector() {
         var _this = _super.call(this) || this;
         _this.emulator = null;
+        _this.counterInterval = 9;
         _this.npcsAdded = [];
         window.GBPluginScheduler.GetInstance().registerPluginRun(_this);
         return _this;
@@ -295,76 +301,51 @@ var GBPluginNPCInfo = /** @class */ (function (_super) {
 window.NPCInfo = new GBPluginNPCInfo();
 /// <reference path="GBPluginScheduler.ts" />
 /// <reference path="GBPluginNPCInjector.ts" />
-var GBPluginPlayerReceiver = /** @class */ (function (_super) {
-    __extends(GBPluginPlayerReceiver, _super);
-    function GBPluginPlayerReceiver() {
+var GBPluginNetwork = /** @class */ (function (_super) {
+    __extends(GBPluginNetwork, _super);
+    function GBPluginNetwork() {
         var _this = _super.call(this) || this;
         _this.connected = false;
         _this.emulator = null;
+        _this.messages = null;
+        _this.messages = [];
         _this.counterInterval = 10;
-        window.GBPluginScheduler.GetInstance().registerPluginRun(_this);
         _this.iceCandidates = [];
         _this.connection = new RTCPeerConnection({
             "iceServers": [{
                     "urls": "stun:stun.l.google.com:19302",
                 }]
         });
-        _this.connection.onicecandidate = function (event) { _this.onIceCandidate(event); };
-        _this.connection.ondatachannel = function (channel) { _this.onDataChannel(channel); };
-        console.log("Waiting for offer");
         return _this;
     }
-    GBPluginPlayerReceiver.prototype.setCandidates = function (candidates) {
-        for (var i = 0; i < candidates.length; i++) {
-            this.connection.addIceCandidate(new RTCIceCandidate(candidates[i]));
-        }
-        console.log("window.Server.setCandidates(JSON.parse('" + JSON.stringify(this.iceCandidates).replace(/\\/g, "\\\\") + "'));");
-    };
-    GBPluginPlayerReceiver.prototype.receiveOffer = function (offerSdp) {
-        var _this = this;
-        this.connection.setRemoteDescription(offerSdp);
-        this.connection.createAnswer().then(function (answer) {
-            _this.connection.setLocalDescription(answer);
-            console.log('window.Server.setRemoteDescription(new RTCSessionDescription(JSON.parse(\'' + JSON.stringify(answer).replace(/\\/g, "\\\\") + '\')));');
-        }).catch(function (error) { });
-    };
-    GBPluginPlayerReceiver.prototype.onIceCandidate = function (event) {
-        if (event.candidate) {
-            this.iceCandidates.push(event.candidate);
-        }
-    };
-    GBPluginPlayerReceiver.prototype.onDataChannel = function (event) {
-        var _this = this;
-        this.channel = event.channel;
-        this.channel.onmessage = function (e) { _this.onMessage(e); };
-        this.channel.onopen = function (e) { _this.onOpen(e); };
-        this.channel.onclose = function (e) { _this.onClose(e); };
-    };
-    GBPluginPlayerReceiver.prototype.onOpen = function (e) {
+    GBPluginNetwork.prototype.onOpen = function (e) {
         console.log("New Connection");
         this.connected = true;
     };
-    GBPluginPlayerReceiver.prototype.onClose = function (e) {
+    GBPluginNetwork.prototype.onClose = function (e) {
         console.log("Close Connection");
         this.connected = false;
     };
-    GBPluginPlayerReceiver.prototype.onError = function (e) {
+    GBPluginNetwork.prototype.onError = function (e) {
         console.log(e);
         this.connected = false;
     };
-    GBPluginPlayerReceiver.prototype.onMessage = function (e) {
+    GBPluginNetwork.prototype.onMessage = function (e) {
+        this.messages.push(e);
+    };
+    GBPluginNetwork.prototype.executeMessage = function (e) {
         //console.log(JSON.parse(e.data));
         var other = JSON.parse(e.data);
         if (window.NPCInfo.npcs.length < 1)
-            return;
+            return true;
         if (this.emulator == null)
-            return;
+            return true;
         var mapIndex = this.emulator.memoryRead(0xDCB6);
         var mapBank = this.emulator.memoryRead(0xDCB5);
         var clone = null;
         if (window.NPCInjector.npcsAdded.length <= 0) {
             if (other.MAP_INDEX != mapIndex || other.MAP_BANK != mapBank)
-                return;
+                return true;
             clone = window.NPCInfo.npcs[0];
             clone.OBJECT_MAP_X = other.OBJECT_MAP_X;
             clone.OBJECT_MAP_Y = other.OBJECT_MAP_Y;
@@ -381,45 +362,48 @@ var GBPluginPlayerReceiver = /** @class */ (function (_super) {
             clone = window.NPCInjector.npcsAdded[0].npc;
             if (other.MAP_INDEX != mapIndex || other.MAP_BANK != mapBank) {
                 window.NPCInjector.npcsAdded[0].mustDelete = true;
-                return;
+                return true;
             }
-            // Si trop loin pour marcher, on TP
-            if (Math.abs(other.OBJECT_MAP_X - clone.OBJECT_MAP_X) > 2 || Math.abs(other.OBJECT_MAP_Y - clone.OBJECT_MAP_Y) > 2) {
-                clone.OBJECT_MAP_X = other.OBJECT_MAP_X;
-                clone.OBJECT_MAP_Y = other.OBJECT_MAP_Y;
-                clone.OBJECT_NEXT_MAP_X = other.OBJECT_NEXT_MAP_X;
-                clone.OBJECT_NEXT_MAP_Y = other.OBJECT_NEXT_MAP_Y;
-                clone.OBJECT_PALETTE = 2;
-                clone.OBJECT_SPRITE_X = other.OBJECT_SPRITE_X;
-                clone.OBJECT_SPRITE_Y = other.OBJECT_SPRITE_Y;
-                clone.OBJECT_FACING = other.OBJECT_FACING;
-                clone.OBJECT_FACING_STEP = other.OBJECT_FACING_STEP;
-                window.NPCInjector.npcsAdded[0].reset(clone);
+            if (clone.OBJECT_DIRECTION_WALKING != 0xFF)
+                return false;
+            if (clone.OBJECT_SPRITE_X % 16 != 0) {
+                window.NPCInjector.npcsAdded[0].set("OBJECT_SPRITE_X", Math.round(clone.OBJECT_SPRITE_X / 16) * 16);
             }
-            else {
-                if (clone.OBJECT_DIRECTION_WALKING != 0xFF)
-                    return;
-                if (other.OBJECT_MAP_X > clone.OBJECT_MAP_X) {
-                    window.NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.RIGHT);
-                }
-                else if (other.OBJECT_MAP_X < clone.OBJECT_MAP_X) {
-                    window.NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.LEFT);
-                }
-                else if (other.OBJECT_MAP_Y > clone.OBJECT_MAP_Y) {
-                    window.NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.DOWN);
-                }
-                else if (other.OBJECT_MAP_Y < clone.OBJECT_MAP_Y) {
-                    window.NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.UP);
-                }
+            if (clone.OBJECT_SPRITE_Y % 16 != 0) {
+                window.NPCInjector.npcsAdded[0].set("OBJECT_SPRITE_Y", Math.round(clone.OBJECT_SPRITE_Y / 16) * 16);
+            }
+            if (other.OBJECT_MAP_X > clone.OBJECT_MAP_X) {
+                window.NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.RIGHT);
+            }
+            else if (other.OBJECT_MAP_X < clone.OBJECT_MAP_X) {
+                window.NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.LEFT);
+            }
+            else if (other.OBJECT_MAP_Y > clone.OBJECT_MAP_Y) {
+                window.NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.DOWN);
+            }
+            else if (other.OBJECT_MAP_Y < clone.OBJECT_MAP_Y) {
+                window.NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.UP);
+            }
+            if (other.OBJECT_MAP_X == clone.OBJECT_MAP_X) {
+                window.NPCInjector.npcsAdded[0].set("OBJECT_SPRITE_X", other.OBJECT_SPRITE_X);
+            }
+            if (other.OBJECT_MAP_Y == clone.OBJECT_MAP_Y) {
+                window.NPCInjector.npcsAdded[0].set("OBJECT_SPRITE_Y", other.OBJECT_SPRITE_Y);
             }
         }
+        return true;
     };
-    GBPluginPlayerReceiver.prototype.run = function (emulator) {
+    GBPluginNetwork.prototype.run = function (emulator) {
         this.emulator = emulator;
         if (this.canRun() == false)
             return;
         if (this.connected == false) {
             return;
+        }
+        if (this.messages.length > 0) {
+            if (this.executeMessage(this.messages[0]) == true) {
+                this.messages.shift();
+            }
         }
         if (window.NPCInfo.npcs <= 0)
             return;
@@ -428,26 +412,56 @@ var GBPluginPlayerReceiver = /** @class */ (function (_super) {
         player.MAP_BANK = this.emulator.memoryRead(0xDCB5);
         this.channel.send(JSON.stringify(player));
     };
-    return GBPluginPlayerReceiver;
+    return GBPluginNetwork;
 }(GBPlugin));
-window.Client = new GBPluginPlayerReceiver();
 /// <reference path="GBPluginScheduler.ts" />
-/// <reference path="GBPluginNPCInjector.ts" />
-var GBPluginPlayerSender = /** @class */ (function (_super) {
-    __extends(GBPluginPlayerSender, _super);
-    function GBPluginPlayerSender() {
+/// <reference path="GBPluginNetwork.ts" />
+var GBPluginNetworkReceiver = /** @class */ (function (_super) {
+    __extends(GBPluginNetworkReceiver, _super);
+    function GBPluginNetworkReceiver() {
         var _this = _super.call(this) || this;
-        _this.connected = false;
-        _this.other = null;
-        _this.emulator = null;
-        _this.counterInterval = 10;
         window.GBPluginScheduler.GetInstance().registerPluginRun(_this);
-        _this.iceCandidates = [];
-        _this.connection = new RTCPeerConnection({
-            "iceServers": [{
-                    "urls": "stun:stun.l.google.com:19302",
-                }]
-        });
+        _this.connection.onicecandidate = function (event) { _this.onIceCandidate(event); };
+        _this.connection.ondatachannel = function (channel) { _this.onDataChannel(channel); };
+        console.log("Waiting for offer");
+        return _this;
+    }
+    GBPluginNetworkReceiver.prototype.setCandidates = function (candidates) {
+        for (var i = 0; i < candidates.length; i++) {
+            this.connection.addIceCandidate(new RTCIceCandidate(candidates[i]));
+        }
+        console.log("window.Server.setCandidates(JSON.parse('" + JSON.stringify(this.iceCandidates).replace(/\\/g, "\\\\") + "'));");
+    };
+    GBPluginNetworkReceiver.prototype.receiveOffer = function (offerSdp) {
+        var _this = this;
+        this.connection.setRemoteDescription(offerSdp);
+        this.connection.createAnswer().then(function (answer) {
+            _this.connection.setLocalDescription(answer);
+            console.log('window.Server.setRemoteDescription(new RTCSessionDescription(JSON.parse(\'' + JSON.stringify(answer).replace(/\\/g, "\\\\") + '\')));');
+        }).catch(function (error) { });
+    };
+    GBPluginNetworkReceiver.prototype.onIceCandidate = function (event) {
+        if (event.candidate) {
+            this.iceCandidates.push(event.candidate);
+        }
+    };
+    GBPluginNetworkReceiver.prototype.onDataChannel = function (event) {
+        var _this = this;
+        this.channel = event.channel;
+        this.channel.onmessage = function (e) { _this.onMessage(e); };
+        this.channel.onopen = function (e) { _this.onOpen(e); };
+        this.channel.onclose = function (e) { _this.onClose(e); };
+    };
+    return GBPluginNetworkReceiver;
+}(GBPluginNetwork));
+window.Client = new GBPluginNetworkReceiver();
+/// <reference path="GBPluginScheduler.ts" />
+/// <reference path="GBPluginNetwork.ts" />
+var GBPluginNetworkSender = /** @class */ (function (_super) {
+    __extends(GBPluginNetworkSender, _super);
+    function GBPluginNetworkSender() {
+        var _this = _super.call(this) || this;
+        window.GBPluginScheduler.GetInstance().registerPluginRun(_this);
         _this.connection.onicecandidate = function (event) { _this.OnIceCandidate(event); };
         _this.channel = _this.connection.createDataChannel('PlayerExchange', {});
         _this.channel.onmessage = function (e) { _this.onMessage(e); };
@@ -461,107 +475,22 @@ var GBPluginPlayerSender = /** @class */ (function (_super) {
         console.log("STARTING NETWORK");
         return _this;
     }
-    GBPluginPlayerSender.prototype.setCandidates = function (candidates) {
+    GBPluginNetworkSender.prototype.setCandidates = function (candidates) {
         for (var i = 0; i < candidates.length; i++) {
             this.connection.addIceCandidate(new RTCIceCandidate(candidates[i]));
         }
     };
-    GBPluginPlayerSender.prototype.setRemoteDescription = function (desc) {
+    GBPluginNetworkSender.prototype.setRemoteDescription = function (desc) {
         this.connection.setRemoteDescription(desc);
         console.log("window.Client.setCandidates(JSON.parse('" + JSON.stringify(this.iceCandidates).replace(/\\/g, "\\\\") + "'));");
     };
-    GBPluginPlayerSender.prototype.OnIceCandidate = function (event) {
+    GBPluginNetworkSender.prototype.OnIceCandidate = function (event) {
         if (event.candidate) {
             this.iceCandidates.push(event.candidate);
         }
     };
-    GBPluginPlayerSender.prototype.onOpen = function (e) {
-        this.connected = true;
-    };
-    GBPluginPlayerSender.prototype.onClose = function (e) {
-        this.connected = false;
-    };
-    GBPluginPlayerSender.prototype.onError = function (e) {
-        this.connected = false;
-    };
-    GBPluginPlayerSender.prototype.onMessage = function (e) {
-        //console.log(JSON.parse(e.data));
-        var other = JSON.parse(e.data);
-        if (window.NPCInfo.npcs.length < 1)
-            return;
-        if (this.emulator == null)
-            return;
-        var mapIndex = this.emulator.memoryRead(0xDCB6);
-        var mapBank = this.emulator.memoryRead(0xDCB5);
-        var clone = null;
-        if (window.NPCInjector.npcsAdded.length <= 0) {
-            if (other.MAP_INDEX != mapIndex || other.MAP_BANK != mapBank)
-                return;
-            clone = window.NPCInfo.npcs[0];
-            clone.OBJECT_MAP_X = other.OBJECT_MAP_X;
-            clone.OBJECT_MAP_Y = other.OBJECT_MAP_Y;
-            clone.OBJECT_NEXT_MAP_X = other.OBJECT_NEXT_MAP_X;
-            clone.OBJECT_NEXT_MAP_Y = other.OBJECT_NEXT_MAP_Y;
-            clone.OBJECT_PALETTE = 2;
-            clone.OBJECT_SPRITE_X = other.OBJECT_SPRITE_X;
-            clone.OBJECT_SPRITE_Y = other.OBJECT_SPRITE_Y;
-            clone.OBJECT_FACING = other.OBJECT_FACING;
-            clone.OBJECT_FACING_STEP = other.OBJECT_FACING_STEP;
-            window.NPCInjector.registerNPC(clone);
-        }
-        else {
-            clone = window.NPCInjector.npcsAdded[0].npc;
-            if (other.MAP_INDEX != mapIndex || other.MAP_BANK != mapBank) {
-                window.NPCInjector.npcsAdded[0].mustDelete = true;
-                return;
-            }
-            // Si trop loin pour marcher, on TP
-            if (Math.abs(other.OBJECT_MAP_X - clone.OBJECT_MAP_X) > 2 || Math.abs(other.OBJECT_MAP_Y - clone.OBJECT_MAP_Y) > 2) {
-                clone.OBJECT_MAP_X = other.OBJECT_MAP_X;
-                clone.OBJECT_MAP_Y = other.OBJECT_MAP_Y;
-                clone.OBJECT_NEXT_MAP_X = other.OBJECT_NEXT_MAP_X;
-                clone.OBJECT_NEXT_MAP_Y = other.OBJECT_NEXT_MAP_Y;
-                clone.OBJECT_PALETTE = 2;
-                clone.OBJECT_SPRITE_X = other.OBJECT_SPRITE_X;
-                clone.OBJECT_SPRITE_Y = other.OBJECT_SPRITE_Y;
-                clone.OBJECT_FACING = other.OBJECT_FACING;
-                clone.OBJECT_FACING_STEP = other.OBJECT_FACING_STEP;
-                window.NPCInjector.npcsAdded[0].reset(clone);
-            }
-            else {
-                if (clone.OBJECT_DIRECTION_WALKING != 0xFF)
-                    return;
-                if (other.OBJECT_MAP_X > clone.OBJECT_MAP_X) {
-                    window.NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.RIGHT);
-                }
-                else if (other.OBJECT_MAP_X < clone.OBJECT_MAP_X) {
-                    window.NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.LEFT);
-                }
-                else if (other.OBJECT_MAP_Y > clone.OBJECT_MAP_Y) {
-                    window.NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.DOWN);
-                }
-                else if (other.OBJECT_MAP_Y < clone.OBJECT_MAP_Y) {
-                    window.NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.UP);
-                }
-            }
-        }
-    };
-    GBPluginPlayerSender.prototype.run = function (emulator) {
-        this.emulator = emulator;
-        if (this.canRun() == false)
-            return;
-        if (this.connected == false) {
-            return;
-        }
-        if (window.NPCInfo.npcs <= 0)
-            return;
-        var player = window.NPCInfo.npcs[0];
-        player.MAP_INDEX = this.emulator.memoryRead(0xDCB6);
-        player.MAP_BANK = this.emulator.memoryRead(0xDCB5);
-        this.channel.send(JSON.stringify(player));
-    };
-    return GBPluginPlayerSender;
-}(GBPlugin));
-window.Server = new GBPluginPlayerSender();
+    return GBPluginNetworkSender;
+}(GBPluginNetwork));
+window.Server = new GBPluginNetworkSender();
 
 },{}]},{},[1]);
