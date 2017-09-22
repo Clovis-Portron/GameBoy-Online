@@ -61,6 +61,46 @@ var GBPluginScheduler = /** @class */ (function () {
 // Exportation
 window.GBPluginScheduler = GBPluginScheduler;
 /// <reference path="GBPluginScheduler.ts" />
+var GBPluginNPCInfo = /** @class */ (function (_super) {
+    __extends(GBPluginNPCInfo, _super);
+    function GBPluginNPCInfo() {
+        var _this = _super.call(this) || this;
+        _this.npcs = [];
+        window.GBPluginScheduler.GetInstance().registerPluginRun(_this);
+        return _this;
+    }
+    GBPluginNPCInfo.prototype.run = function (emulator) {
+        if (this.canRun() == false)
+            return;
+        //console.log("NPC INFO");
+        this.npcs = this.searchNPCS(emulator);
+    };
+    GBPluginNPCInfo.prototype.searchNPCS = function (emulator) {
+        var results = [];
+        var current = GBPluginNPCInfo.NPCBLOCKSTART;
+        while (current < 0xD720) {
+            if (emulator.memoryRead(current) != 0x0)
+                results.push(this.generateNPCFromRAM(emulator, current));
+            current = current + 0x28;
+        }
+        return results;
+    };
+    GBPluginNPCInfo.prototype.generateNPCFromRAM = function (emulator, slot) {
+        var npc = new NPC();
+        var raw = [];
+        for (var i = 0; i < Object.keys(npc).length; i++) {
+            npc[Object.keys(npc)[i]] = emulator.memoryRead(slot);
+            raw.push(emulator.memoryRead(slot));
+            slot = slot + 0x01;
+        }
+        //console.log(raw);
+        return npc;
+    };
+    GBPluginNPCInfo.NPCBLOCKSTART = 0xD4D6;
+    return GBPluginNPCInfo;
+}(GBPlugin));
+window.NPCInfo = new GBPluginNPCInfo();
+/// <reference path="GBPluginScheduler.ts" />
 var NPC = /** @class */ (function () {
     function NPC() {
         this.OBJECT_SPRITE = 0x3C;
@@ -176,12 +216,14 @@ var NPCWatcher = /** @class */ (function () {
         }
     };
     NPCWatcher.prototype.update = function () {
-        if ((this.emulator.memoryRead(this.slot) == 0 && this.created == true) || this.mustDelete) {
+        /*if((this.emulator.memoryRead(this.slot) == 0 && this.created == true) || this.mustDelete)
+        {
             // Il a été supprimé, on le réalloue
             return false;
         }
-        if (this.created == false)
+        if(this.created == false)
             this.created = true;
+        */
         var cell = this.slot;
         for (var i = 0; i < Object.keys(this.npc).length; i++) {
             if (this.valuesToUpdate[Object.keys(this.npc)[i]] == true) {
@@ -190,12 +232,11 @@ var NPCWatcher = /** @class */ (function () {
             }
             else
                 this.npc[Object.keys(this.npc)[i]] = this.emulator.memoryRead(cell);
-            this.emulator.memoryWrite(cell, this.npc[Object.keys(this.npc)[i]]);
             cell = cell + 0x01;
         }
-        this.mustUpdate = false;
         return true;
     };
+    NPCWatcher.NPCBLOCKSTART = 0xD4D6;
     NPCWatcher.DIRECTION = {
         "UP": 0,
         "DOWN": 1,
@@ -204,103 +245,8 @@ var NPCWatcher = /** @class */ (function () {
     };
     return NPCWatcher;
 }());
-var GBPluginNPCInjector = /** @class */ (function (_super) {
-    __extends(GBPluginNPCInjector, _super);
-    function GBPluginNPCInjector() {
-        var _this = _super.call(this) || this;
-        _this.emulator = null;
-        _this.counterInterval = 9;
-        _this.npcsAdded = [];
-        window.GBPluginScheduler.GetInstance().registerPluginRun(_this);
-        return _this;
-    }
-    ;
-    GBPluginNPCInjector.prototype.run = function (emulator) {
-        this.emulator = emulator;
-        if (this.canRun() == false)
-            return;
-        for (var i = 0; i < this.npcsAdded.length;) {
-            if (this.npcsAdded[i].update() == false) {
-                //if(this.npcsAdded[i].mustDelete == false)
-                //this.registerNPC(this.npcsAdded[i].npc);
-                this.npcsAdded[i].free();
-                this.npcsAdded.splice(i, 1);
-            }
-            else
-                i++;
-        }
-    };
-    GBPluginNPCInjector.prototype.registerNPC = function (npc) {
-        if (this.emulator == null)
-            return;
-        var freeSlot = this.searchFreeNPCSlot(this.emulator);
-        if (freeSlot == null)
-            return;
-        this.addNPC(this.emulator, freeSlot, npc);
-    };
-    GBPluginNPCInjector.prototype.searchFreeNPCSlot = function (emulator) {
-        var current = GBPluginNPCInjector.NPCBLOCKSTART;
-        while (emulator.memoryRead(current) != 0x0 && current < 0xD720) {
-            current = current + 0x28;
-        }
-        if (current < 0xD720)
-            return current;
-        else
-            return null;
-    };
-    GBPluginNPCInjector.prototype.addNPC = function (emulator, slot, npc) {
-        var p = new NPCWatcher(emulator, slot, npc);
-        p.update();
-        this.npcsAdded.push(p);
-    };
-    GBPluginNPCInjector.NPCBLOCKSTART = 0xD4D6;
-    return GBPluginNPCInjector;
-}(GBPlugin));
-// Injection
-window.NPCInjector = new GBPluginNPCInjector();
 /// <reference path="GBPluginScheduler.ts" />
-/// <reference path="GBPluginNPCInjector.ts" />
-var GBPluginNPCInfo = /** @class */ (function (_super) {
-    __extends(GBPluginNPCInfo, _super);
-    function GBPluginNPCInfo() {
-        var _this = _super.call(this) || this;
-        _this.npcs = [];
-        window.GBPluginScheduler.GetInstance().registerPluginRun(_this);
-        return _this;
-    }
-    GBPluginNPCInfo.prototype.run = function (emulator) {
-        if (this.canRun() == false)
-            return;
-        //console.log("NPC INFO");
-        this.npcs = this.searchNPCS(emulator);
-    };
-    GBPluginNPCInfo.prototype.searchNPCS = function (emulator) {
-        var results = [];
-        var current = GBPluginNPCInfo.NPCBLOCKSTART;
-        while (current < 0xD720) {
-            if (emulator.memoryRead(current) != 0x0)
-                results.push(this.generateNPCFromRAM(emulator, current));
-            current = current + 0x28;
-        }
-        return results;
-    };
-    GBPluginNPCInfo.prototype.generateNPCFromRAM = function (emulator, slot) {
-        var npc = new NPC();
-        var raw = [];
-        for (var i = 0; i < Object.keys(npc).length; i++) {
-            npc[Object.keys(npc)[i]] = emulator.memoryRead(slot);
-            raw.push(emulator.memoryRead(slot));
-            slot = slot + 0x01;
-        }
-        //console.log(raw);
-        return npc;
-    };
-    GBPluginNPCInfo.NPCBLOCKSTART = 0xD4D6;
-    return GBPluginNPCInfo;
-}(GBPlugin));
-window.NPCInfo = new GBPluginNPCInfo();
-/// <reference path="GBPluginScheduler.ts" />
-/// <reference path="GBPluginNPCInjector.ts" />
+/// <reference path="NPC.ts" />
 var GBPluginNetwork = /** @class */ (function (_super) {
     __extends(GBPluginNetwork, _super);
     function GBPluginNetwork() {
@@ -308,6 +254,8 @@ var GBPluginNetwork = /** @class */ (function (_super) {
         _this.connected = false;
         _this.emulator = null;
         _this.messages = null;
+        _this.last_sign = null;
+        _this.local_clone = null;
         _this.messages = [];
         _this.counterInterval = 10;
         _this.iceCandidates = [];
@@ -340,57 +288,55 @@ var GBPluginNetwork = /** @class */ (function (_super) {
             return true;
         if (this.emulator == null)
             return true;
+        var sign = other.OBJECT_MAP_X + "" + other.OBJECT_MAP_Y;
         var mapIndex = this.emulator.memoryRead(0xDCB6);
         var mapBank = this.emulator.memoryRead(0xDCB5);
-        var clone = null;
-        if (window.NPCInjector.npcsAdded.length <= 0) {
+        if (this.local_clone == null) {
             if (other.MAP_INDEX != mapIndex || other.MAP_BANK != mapBank)
                 return true;
-            clone = window.NPCInfo.npcs[0];
-            clone.OBJECT_MAP_X = other.OBJECT_MAP_X;
-            clone.OBJECT_MAP_Y = other.OBJECT_MAP_Y;
-            clone.OBJECT_NEXT_MAP_X = other.OBJECT_NEXT_MAP_X;
-            clone.OBJECT_NEXT_MAP_Y = other.OBJECT_NEXT_MAP_Y;
-            clone.OBJECT_PALETTE = 2;
-            clone.OBJECT_SPRITE_X = other.OBJECT_SPRITE_X;
-            clone.OBJECT_SPRITE_Y = other.OBJECT_SPRITE_Y;
-            clone.OBJECT_FACING = other.OBJECT_FACING;
-            clone.OBJECT_FACING_STEP = other.OBJECT_FACING_STEP;
-            window.NPCInjector.registerNPC(clone);
+            this.local_clone = new NPCWatcher(this.emulator, 0xD5C6, new NPC());
+            this.local_clone.set("OBJECT_MAP_X", other.OBJECT_MAP_X);
+            this.local_clone.set("OBJECT_MAP_Y", other.OBJECT_MAP_Y);
+            this.local_clone.set("OBJECT_NEXT_MAP_X", other.OBJECT_NEXT_MAP_X);
+            this.local_clone.set("OBJECT_NEXT_MAP_Y", other.OBJECT_NEXT_MAP_Y);
+            this.local_clone.set("OBJECT_INIT_X", other.OBJECT_MAP_X);
+            this.local_clone.set("OBJECT_INIT_Y", other.OBJECT_MAP_Y);
+            this.local_clone.set("OBJECT_PALETTE", 1);
+            this.local_clone.set("OBJECT_SPRITE_X", other.OBJECT_SPRITE_X);
+            this.local_clone.set("OBJECT_SPRITE_Y", other.OBJECT_SPRITE_Y);
+            this.local_clone.set("OBJECT_FACING", other.OBJECT_FACING);
+            this.local_clone.set("OBJECT_FACING_STEP", other.OBJECT_FACING_STEP);
+            this.local_clone.set("OBJECT_SPRITE", 0x3C);
+            this.local_clone.set("OBJECT_SPRITE_TILE", 0x00);
         }
         else {
-            clone = window.NPCInjector.npcsAdded[0].npc;
             if (other.MAP_INDEX != mapIndex || other.MAP_BANK != mapBank) {
-                window.NPCInjector.npcsAdded[0].mustDelete = true;
+                this.local_clone.free();
+                this.local_clone = null;
                 return true;
             }
-            if (clone.OBJECT_DIRECTION_WALKING != 0xFF)
-                return false;
-            if (clone.OBJECT_SPRITE_X % 16 != 0) {
-                window.NPCInjector.npcsAdded[0].set("OBJECT_SPRITE_X", Math.round(clone.OBJECT_SPRITE_X / 16) * 16);
+            if (this.local_clone.npc.OBJECT_DIRECTION_WALKING != 0xFF) {
+                if (this.last_sign === sign)
+                    return true;
+                else
+                    return false;
             }
-            if (clone.OBJECT_SPRITE_Y % 16 != 0) {
-                window.NPCInjector.npcsAdded[0].set("OBJECT_SPRITE_Y", Math.round(clone.OBJECT_SPRITE_Y / 16) * 16);
+            this.local_clone.set("OBJECT_SPRITE_X", 16 * this.local_clone.npc.OBJECT_MAP_X);
+            this.local_clone.set("OBJECT_SPRITE_Y", 16 * this.local_clone.npc.OBJECT_MAP_Y);
+            if (other.OBJECT_MAP_X > this.local_clone.npc.OBJECT_MAP_X) {
+                this.local_clone.walk(NPCWatcher.DIRECTION.RIGHT);
             }
-            if (other.OBJECT_MAP_X > clone.OBJECT_MAP_X) {
-                window.NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.RIGHT);
+            else if (other.OBJECT_MAP_X < this.local_clone.npc.OBJECT_MAP_X) {
+                this.local_clone.walk(NPCWatcher.DIRECTION.LEFT);
             }
-            else if (other.OBJECT_MAP_X < clone.OBJECT_MAP_X) {
-                window.NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.LEFT);
+            else if (other.OBJECT_MAP_Y > this.local_clone.npc.OBJECT_MAP_Y) {
+                this.local_clone.walk(NPCWatcher.DIRECTION.DOWN);
             }
-            else if (other.OBJECT_MAP_Y > clone.OBJECT_MAP_Y) {
-                window.NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.DOWN);
-            }
-            else if (other.OBJECT_MAP_Y < clone.OBJECT_MAP_Y) {
-                window.NPCInjector.npcsAdded[0].walk(NPCWatcher.DIRECTION.UP);
-            }
-            if (other.OBJECT_MAP_X == clone.OBJECT_MAP_X) {
-                window.NPCInjector.npcsAdded[0].set("OBJECT_SPRITE_X", other.OBJECT_SPRITE_X);
-            }
-            if (other.OBJECT_MAP_Y == clone.OBJECT_MAP_Y) {
-                window.NPCInjector.npcsAdded[0].set("OBJECT_SPRITE_Y", other.OBJECT_SPRITE_Y);
+            else if (other.OBJECT_MAP_Y < this.local_clone.npc.OBJECT_MAP_Y) {
+                this.local_clone.walk(NPCWatcher.DIRECTION.UP);
             }
         }
+        this.last_sign = sign;
         return true;
     };
     GBPluginNetwork.prototype.run = function (emulator) {
@@ -400,7 +346,11 @@ var GBPluginNetwork = /** @class */ (function (_super) {
         if (this.connected == false) {
             return;
         }
+        if (this.local_clone != null)
+            this.local_clone.update();
         if (this.messages.length > 0) {
+            if (this.messages.length > 1)
+                this.messages = [this.messages[this.messages.length - 1]];
             if (this.executeMessage(this.messages[0]) == true) {
                 this.messages.shift();
             }

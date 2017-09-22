@@ -39,6 +39,9 @@ class NPC
 
 class NPCWatcher
 {
+
+    private static NPCBLOCKSTART = 0xD4D6;
+    
     public static DIRECTION = {
         "UP" : 0,
         "DOWN" : 1,
@@ -147,14 +150,14 @@ class NPCWatcher
 
     public update()
     {
-        if((this.emulator.memoryRead(this.slot) == 0 && this.created == true) || this.mustDelete)
+        /*if((this.emulator.memoryRead(this.slot) == 0 && this.created == true) || this.mustDelete)
         {
             // Il a été supprimé, on le réalloue
             return false;
         }
         if(this.created == false)
             this.created = true;
-		
+		*/
         let cell = this.slot;        
         for(let i = 0; i < Object.keys(this.npc).length; i++)
         {
@@ -165,84 +168,8 @@ class NPCWatcher
             }
             else 
                 this.npc[Object.keys(this.npc)[i]] = this.emulator.memoryRead(cell);
-            this.emulator.memoryWrite(cell, this.npc[Object.keys(this.npc)[i]]);    
             cell = cell + 0x01;    
         }
-        this.mustUpdate = false;
         return true;
     }
 }
-
-class GBPluginNPCInjector extends GBPlugin
-{
-    private static NPCBLOCKSTART = 0xD4D6;
-
-    //private npcsAdded : Array<NPCWatcher>;
-    public npcsAdded : Array<NPCWatcher>;
-
-    private emulator : any = null;;
-
-    constructor()
-    {
-        super();
-        this.counterInterval = 9;
-        this.npcsAdded = [];
-        (<any>window).GBPluginScheduler.GetInstance().registerPluginRun(this);        
-    }
-
-    public run(emulator : any) : void 
-    {
-        this.emulator = emulator;
-        if(this.canRun() == false)
-            return;
-
-        for(let i = 0; i < this.npcsAdded.length;)
-        {
-            if(this.npcsAdded[i].update() == false)
-            {
-                //if(this.npcsAdded[i].mustDelete == false)
-                //this.registerNPC(this.npcsAdded[i].npc);
-                this.npcsAdded[i].free();
-                this.npcsAdded.splice(i, 1);
-            }
-            else 
-                i++;
-        }
-    
-    }
-
-    public registerNPC(npc : NPC)
-    {
-        if(this.emulator == null)
-            return;
-        let freeSlot = this.searchFreeNPCSlot(this.emulator);
-        if(freeSlot == null)
-            return;
-        this.addNPC(this.emulator, freeSlot, npc);
-    }
-
-    private searchFreeNPCSlot(emulator : any) : number 
-    {
-        let current = GBPluginNPCInjector.NPCBLOCKSTART;
-        while(emulator.memoryRead(current) != 0x0 && current < 0xD720)
-        {
-            current = current + 0x28;
-        }
-        if(current < 0xD720)
-            return current;
-        else 
-            return null;
-    }
-
-    private addNPC(emulator : any, slot : number, npc : NPC) : void 
-    {
-        let p = new NPCWatcher(emulator, slot, npc);
-        p.update();
-        this.npcsAdded.push(p);
-    }
-
-
-}
-
-// Injection
-(<any>window).NPCInjector = new GBPluginNPCInjector();

@@ -1,5 +1,4 @@
 /// <reference path="GBPluginScheduler.ts" />
-/// <reference path="GBPluginNPCInjector.ts" />
 
 
 class GBPluginNPCInfo extends GBPlugin
