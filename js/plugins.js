@@ -165,6 +165,22 @@ var NPCWatcher = /** @class */ (function () {
         this.set("OBJECT_STEP_TYPE", 0x03);
         this.set("OBJECT_STEP_DURATION", 0);
     };
+    NPCWatcher.prototype.resetSprite = function () {
+        var y = this.npc.OBJECT_MAP_Y;
+        y = (256 + y - this.emulator.memoryRead(0xDCB7)) % 256;
+        y = (256 + y & 0x0F) % 256;
+        y = (256 + y << 4) % 256; // bon sens ? 
+        y = (256 + y - this.emulator.memoryRead(0xD14D)) % 256;
+        y = (256 + y) % 256;
+        this.set("OBJECT_SPRITE_Y", y);
+        var x = this.npc.OBJECT_MAP_X;
+        x = (256 + x - this.emulator.memoryRead(0xDCB8)) % 256;
+        x = (256 + x & 0x0F) % 256;
+        x = (256 + x << 4) % 256; // bon sens ? 
+        x = (256 + x - this.emulator.memoryRead(0xD14C)) % 256;
+        x = (256 + x) % 256;
+        this.set("OBJECT_SPRITE_X", x);
+    };
     NPCWatcher.prototype.walk = function (direction) {
         this.set("OBJECT_MOVEMENTTYPE", 0x00);
         this.set("OBJECT_STEP_DURATION", 16);
@@ -321,8 +337,7 @@ var GBPluginNetwork = /** @class */ (function (_super) {
                 else
                     return false;
             }
-            this.local_clone.set("OBJECT_SPRITE_X", 16 * this.local_clone.npc.OBJECT_MAP_X);
-            this.local_clone.set("OBJECT_SPRITE_Y", 16 * this.local_clone.npc.OBJECT_MAP_Y);
+            this.local_clone.resetSprite();
             if (other.OBJECT_MAP_X > this.local_clone.npc.OBJECT_MAP_X) {
                 this.local_clone.walk(NPCWatcher.DIRECTION.RIGHT);
             }

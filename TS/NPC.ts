@@ -85,6 +85,26 @@ class NPCWatcher
         this.set("OBJECT_STEP_DURATION",0);
     }
 
+    public resetSprite()
+    {
+        let y = this.npc.OBJECT_MAP_Y;
+        y = (256+ y - this.emulator.memoryRead(0xDCB7))%256;
+        y = (256 + y & 0x0F)%256;
+        y = (256+ y << 4)%256; // bon sens ? 
+        y = (256 + y -  this.emulator.memoryRead(0xD14D))%256;
+        y = (256 + y) % 256;
+        this.set("OBJECT_SPRITE_Y", y);
+
+        let x = this.npc.OBJECT_MAP_X;
+        x = (256+ x - this.emulator.memoryRead(0xDCB8))%256;
+        x = (256 + x & 0x0F)%256;
+        x = (256+ x << 4)%256; // bon sens ? 
+        x = (256 + x -  this.emulator.memoryRead(0xD14C))%256;
+        x = (256 + x) % 256;
+        this.set("OBJECT_SPRITE_X", x);
+
+    }
+
     public walk(direction : number)
     {
         this.set("OBJECT_MOVEMENTTYPE",0x00);

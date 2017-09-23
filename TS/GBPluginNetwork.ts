@@ -102,10 +102,7 @@ abstract class GBPluginNetwork extends GBPlugin
                     return false;
                 
             }
-            this.local_clone.set("OBJECT_SPRITE_X", 16*this.local_clone.npc.OBJECT_MAP_X);
-            this.local_clone.set("OBJECT_SPRITE_Y", 16*this.local_clone.npc.OBJECT_MAP_Y);
-            
-            
+            this.local_clone.resetSprite();
             if(other.OBJECT_MAP_X >this.local_clone.npc.OBJECT_MAP_X)
             {
                 this.local_clone.walk(NPCWatcher.DIRECTION.RIGHT);
