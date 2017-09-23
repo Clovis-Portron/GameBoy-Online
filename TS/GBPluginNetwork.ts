@@ -18,7 +18,7 @@ abstract class GBPluginNetwork extends GBPlugin
     {
         super();
         this.messages = [];
-        this.counterInterval = 10;
+        this.counterInterval = 0;
         this.iceCandidates = [];
         this.connection = new RTCPeerConnection({
            "iceServers": [{
@@ -62,8 +62,6 @@ abstract class GBPluginNetwork extends GBPlugin
         
         let sign = other.OBJECT_MAP_X+""+other.OBJECT_MAP_Y;
 
-
-
 		var mapIndex = this.emulator.memoryRead(0xDCB6);
 		var mapBank = this.emulator.memoryRead(0xDCB5);					
 
@@ -71,7 +69,7 @@ abstract class GBPluginNetwork extends GBPlugin
         {
             if(other.MAP_INDEX != mapIndex || other.MAP_BANK != mapBank) return true;
             
-            this.local_clone = new NPCWatcher(this.emulator, 0xD5C6, new NPC());
+            this.local_clone = new NPCWatcher(this.emulator, 0xD5C6, (<any>window).NPCInfo.npcs[0]);
             this.local_clone.set("OBJECT_MAP_X", other.OBJECT_MAP_X);
             this.local_clone.set("OBJECT_MAP_Y", other.OBJECT_MAP_Y);
             this.local_clone.set("OBJECT_NEXT_MAP_X", other.OBJECT_NEXT_MAP_X);
@@ -85,9 +83,23 @@ abstract class GBPluginNetwork extends GBPlugin
             this.local_clone.set("OBJECT_FACING_STEP", other.OBJECT_FACING_STEP);
             this.local_clone.set("OBJECT_SPRITE", 0x3C);
             this.local_clone.set("OBJECT_SPRITE_TILE", 0x00);
+            this.local_clone.set("OBJECT_MOVEMENTTYPE",0x00);
+            this.local_clone.set("OBJECT_STEP_DURATION",0);
+            this.local_clone.set("OBJECT_NEXT_TILE",0);
+            this.local_clone.set("OBJECT_STEP_TYPE",3);
+            this.local_clone.set("OBJECT_MAP_OBJECT_INDEX", 0x03);
+            this.local_clone.set("OBJECT_RADIUS",0);
+            this.local_clone.set("OBJECT_STEP_FRAME",0);
+            this.local_clone.set("OBJECT_MOVEMENT_BYTE_INDEX", 0);
+            this.local_clone.set("OBJECT_DIRECTION_WALKING",0xFF);        
+            this.local_clone.set("OBJECT_STEP_TYPE",0x03);   
+            this.local_clone.set("OBJECT_STEP_DURATION",0);
+            this.local_clone.update();
+            this.local_clone.resetSprite();
+            
         }
         else 
-        {
+        {        
 			if(other.MAP_INDEX != mapIndex || other.MAP_BANK != mapBank)
 			{
                 this.local_clone.free();
@@ -102,21 +114,27 @@ abstract class GBPluginNetwork extends GBPlugin
                     return false;
                 
             }
-            this.local_clone.resetSprite();
-            if(other.OBJECT_MAP_X >this.local_clone.npc.OBJECT_MAP_X)
+            if(other.OBJECT_MAP_X > this.local_clone.npc.OBJECT_MAP_X)
             {
+                this.local_clone.resetSprite();
                 this.local_clone.walk(NPCWatcher.DIRECTION.RIGHT);
             }
             else if(other.OBJECT_MAP_X < this.local_clone.npc.OBJECT_MAP_X)
             {
+                this.local_clone.resetSprite();
+                
                 this.local_clone.walk(NPCWatcher.DIRECTION.LEFT);
             }
             else if(other.OBJECT_MAP_Y > this.local_clone.npc.OBJECT_MAP_Y)
             {
+                this.local_clone.resetSprite();
+                
                 this.local_clone.walk(NPCWatcher.DIRECTION.DOWN);
             }
             else if(other.OBJECT_MAP_Y < this.local_clone.npc.OBJECT_MAP_Y)
             {
+                this.local_clone.resetSprite();
+                
                 this.local_clone.walk(NPCWatcher.DIRECTION.UP);
             }
         }

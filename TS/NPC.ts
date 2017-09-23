@@ -59,13 +59,14 @@ class NPCWatcher
 
     constructor(emulator,slot,npc: NPC)
     {
-        this.npc = npc;
+        this.npc = new NPC();
         this.slot = slot;
         this.emulator = emulator;
         this.mustUpdate = true;
         for(let i = 0; i < Object.keys(this.npc).length; i++)
         {
             this.valuesToUpdate[Object.keys(this.npc)[i]] = true;
+            this.npc[Object.keys(this.npc)[i]] = npc[Object.keys(this.npc)[i]];
         }
     }
 

@@ -145,12 +145,13 @@ var NPCWatcher = /** @class */ (function () {
         this.valuesToUpdate = [];
         this.created = false;
         this.mustDelete = false;
-        this.npc = npc;
+        this.npc = new NPC();
         this.slot = slot;
         this.emulator = emulator;
         this.mustUpdate = true;
         for (var i = 0; i < Object.keys(this.npc).length; i++) {
             this.valuesToUpdate[Object.keys(this.npc)[i]] = true;
+            this.npc[Object.keys(this.npc)[i]] = npc[Object.keys(this.npc)[i]];
         }
     }
     NPCWatcher.prototype.set = function (property, value) {
@@ -273,7 +274,7 @@ var GBPluginNetwork = /** @class */ (function (_super) {
         _this.last_sign = null;
         _this.local_clone = null;
         _this.messages = [];
-        _this.counterInterval = 10;
+        _this.counterInterval = 0;
         _this.iceCandidates = [];
         _this.connection = new RTCPeerConnection({
             "iceServers": [{
@@ -310,7 +311,7 @@ var GBPluginNetwork = /** @class */ (function (_super) {
         if (this.local_clone == null) {
             if (other.MAP_INDEX != mapIndex || other.MAP_BANK != mapBank)
                 return true;
-            this.local_clone = new NPCWatcher(this.emulator, 0xD5C6, new NPC());
+            this.local_clone = new NPCWatcher(this.emulator, 0xD5C6, window.NPCInfo.npcs[0]);
             this.local_clone.set("OBJECT_MAP_X", other.OBJECT_MAP_X);
             this.local_clone.set("OBJECT_MAP_Y", other.OBJECT_MAP_Y);
             this.local_clone.set("OBJECT_NEXT_MAP_X", other.OBJECT_NEXT_MAP_X);
@@ -324,6 +325,19 @@ var GBPluginNetwork = /** @class */ (function (_super) {
             this.local_clone.set("OBJECT_FACING_STEP", other.OBJECT_FACING_STEP);
             this.local_clone.set("OBJECT_SPRITE", 0x3C);
             this.local_clone.set("OBJECT_SPRITE_TILE", 0x00);
+            this.local_clone.set("OBJECT_MOVEMENTTYPE", 0x00);
+            this.local_clone.set("OBJECT_STEP_DURATION", 0);
+            this.local_clone.set("OBJECT_NEXT_TILE", 0);
+            this.local_clone.set("OBJECT_STEP_TYPE", 3);
+            this.local_clone.set("OBJECT_MAP_OBJECT_INDEX", 0x03);
+            this.local_clone.set("OBJECT_RADIUS", 0);
+            this.local_clone.set("OBJECT_STEP_FRAME", 0);
+            this.local_clone.set("OBJECT_MOVEMENT_BYTE_INDEX", 0);
+            this.local_clone.set("OBJECT_DIRECTION_WALKING", 0xFF);
+            this.local_clone.set("OBJECT_STEP_TYPE", 0x03);
+            this.local_clone.set("OBJECT_STEP_DURATION", 0);
+            this.local_clone.update();
+            this.local_clone.resetSprite();
         }
         else {
             if (other.MAP_INDEX != mapIndex || other.MAP_BANK != mapBank) {
@@ -337,17 +351,20 @@ var GBPluginNetwork = /** @class */ (function (_super) {
                 else
                     return false;
             }
-            this.local_clone.resetSprite();
             if (other.OBJECT_MAP_X > this.local_clone.npc.OBJECT_MAP_X) {
+                this.local_clone.resetSprite();
                 this.local_clone.walk(NPCWatcher.DIRECTION.RIGHT);
             }
             else if (other.OBJECT_MAP_X < this.local_clone.npc.OBJECT_MAP_X) {
+                this.local_clone.resetSprite();
                 this.local_clone.walk(NPCWatcher.DIRECTION.LEFT);
             }
             else if (other.OBJECT_MAP_Y > this.local_clone.npc.OBJECT_MAP_Y) {
+                this.local_clone.resetSprite();
                 this.local_clone.walk(NPCWatcher.DIRECTION.DOWN);
             }
             else if (other.OBJECT_MAP_Y < this.local_clone.npc.OBJECT_MAP_Y) {
+                this.local_clone.resetSprite();
                 this.local_clone.walk(NPCWatcher.DIRECTION.UP);
             }
         }
