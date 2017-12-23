@@ -7,7 +7,7 @@
     "test": "test"
   },
   "scripts": {
-    "build": "tsc --project TS && browserify js/plugins-temp.js -o js/plugins.js && rm js/plugins-temp.js && rm js/plugins-temp.js.map"
+    "build": "tsc --project TS && browserify js/plugins-temp.js -o js/plugins.js && del js\\plugins-temp.js && del js\\plugins-temp.js.map"
   },
   "repository": {
     "type": "git",
@@ -20,7 +20,6 @@
   },
   "homepage": "https://github.com/Clovis-Portron/GameBoy-Online#readme",
   "devDependencies": {
-    "@types/webrtc": "0.0.21",
     "browserify": "^14.4.0",
     "typescript": "^2.5.2"
   },
