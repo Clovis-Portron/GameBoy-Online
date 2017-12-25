@@ -5721,7 +5721,6 @@ GameBoyCore.prototype.run = function () {
 				this.audioUnderrunAdjustment();
 				this.clockUpdate();			//RTC clocking.
 				if (!this.halt) {
-					window.GBPluginScheduler.GetInstance().run(this);
 					this.executeIteration();
 				}
 				else {						//Finish the HALT rundown execution.
@@ -5769,6 +5768,7 @@ GameBoyCore.prototype.executeIteration = function () {
 			//IME is true and and interrupt was matched:
 			this.launchIRQ();
 		}
+		window.GBPluginScheduler.GetInstance().run(this);
 		//Fetch the current opcode:
 		opcodeToExecute = this.memoryReader[this.programCounter](this, this.programCounter);
 		//Increment the program counter to the next instruction:
@@ -5814,7 +5814,8 @@ GameBoyCore.prototype.executeIteration = function () {
 			this.serialShiftTimer -= this.CPUTicks;
 			if (this.serialShiftTimer <= 0) {
 				this.serialShiftTimer = this.serialShiftTimerAllocated;
-				this.memory[0xFF01] = ((this.memory[0xFF01] << 1) & 0xFE) | 0x01;	//We could shift in actual link data here if we were to implement such!!!
+				window.GBPluginScheduler.GetInstance().link(this);
+				//this.memory[0xFF01] = ((this.memory[0xFF01] << 1) & 0xFE) | 0x01;	//We could shift in actual link data here if we were to implement such!!!
 			}
 		}
 		//End of iteration routine:
