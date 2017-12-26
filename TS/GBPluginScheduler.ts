@@ -10,10 +10,12 @@ class GBPluginScheduler
 
     private pluginsRun : Array<GBPlugin>;
     private pluginsStart : Array<GBPlugin>;
+    private pluginsLink : Array<GBPlugin>;
     constructor()
     {
         this.pluginsRun = [];
         this.pluginsStart = [];
+        this.pluginsLink = [];
     }
 
     public run(emulator : any) : void 
@@ -30,8 +32,15 @@ class GBPluginScheduler
         console.log("START");
         this.pluginsStart.forEach(function(plugin){ 
             console.log("Running "+(<any>plugin.constructor).name);
-            plugin.run(emulator);
+            plugin.start(emulator);
         }); 
+    }
+
+    public link(emulator : Emulator) : void 
+    {
+        this.pluginsLink.forEach(function(plugin){
+            plugin.link(emulator);
+        });
     }
 
     public registerPluginRun(plugin : GBPlugin) : void 
@@ -42,6 +51,11 @@ class GBPluginScheduler
     public registerPluginStart(plugin : GBPlugin) : void 
     {
         this.pluginsStart.push(plugin);
+    }
+
+    public registerPluginLink(plugin : GBPlugin) : void 
+    {
+        this.pluginsLink.push(plugin);
     }
 }
 
