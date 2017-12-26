@@ -2,7 +2,8 @@
   "compileOnSave": true,
   "compilerOptions": {
     "module":"system",
-    "target": "es5",
+    "target": "es6",
+    "lib": ["es6", "dom"],
     "sourceMap": true,
     "outFile": "./../js/plugins-temp.js",
     "watch": false

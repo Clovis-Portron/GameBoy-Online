@@ -18,9 +18,8 @@ abstract class GBPlugin
         
     }
 
-    link(emulator : any) : void 
+    link(emulator : any) : void
     {
-
     }
 
     run(emulator : any) : void

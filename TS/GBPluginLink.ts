@@ -1,85 +1,108 @@
 /// <reference path="GBPluginScheduler.ts" />
+/// <reference path="GBPluginNetworkSender.ts" />
+/// <reference path="GBPluginNetworkReceiver.ts" />
+
 class GBPluginLink extends GBPlugin
 {
     private static LINKSTAT = 0xFF02;
     private static LINKDATA = 0xFF01;
     private static EVENT = 0xFF0F;
 
-    private transfering : boolean = false;
-    private master : boolean = false;
-    private buffer : number = null;
-    private inputBuffer : number = 0x02;
-    private receivedData : number = 0x02;
+    private internal : boolean = null;
+
+    private incoming : Message = null;
     private transferCounter : number = 0;
-    private lastShift : number = null;
+    private inputBuffer : number = null;
+    private outputBuffer : number = null;
+    private lastState = false;
+    private transfering = false;
+    private emulator : Emulator = null;
 
     constructor()
     {
         super();
         this.counterInterval = 0;
+        let self = this;
+        (<any>window).Server.registerCallback("LINK", function(e : Message){
+            self.receive(e);
+        });
+        (<any>window).Client.registerCallback("LINK", function(e : Message){
+            self.receive(e);
+        });
     }
+
+    private receive(e : Message)
+    {
+        //console.log("input buffer loaded with "+e.data.toString(16));
+        this.inputBuffer = e.data;
+        this.exchange();        
+    }
+
+    private send(emulator : Emulator)
+    {
+        this.transferCounter++;
+        if(this.transferCounter<2)
+            return;
+        this.outputBuffer = emulator.memoryRead(GBPluginLink.LINKDATA);
+        //console.log("Output buffer loaded with "+this.outputBuffer.toString(16));
+        (<any>window).Server.sendMessage({
+            "type" : "LINK", 
+            "data" : this.outputBuffer
+        });
+        (<any>window).Client.sendMessage({
+            "type" : "LINK", 
+            "data" : this.outputBuffer
+        });
+        emulator.stopEmulator |= 2;
+        emulator.CPUStopped = true;
+        this.exchange();
+    }
+
+    private exchange()
+    {
+        if(this.outputBuffer != null && this.inputBuffer != null)
+        {
+            this.emulator.memoryWrite(GBPluginLink.LINKDATA, this.inputBuffer);
+            this.outputBuffer = null;
+            this.inputBuffer = null;
+            //console.log("SWAP = "+this.emulator.memoryRead(GBPluginLink.LINKDATA).toString(16));
+            this.emulator.stopEmulator = 1;
+            this.emulator.CPUStopped = false;        
+        }
+    }
+
+
 
     public link(emulator : Emulator) : void 
     {
-        if(this.transfering == true && this.lastShift != null && Date.now() - this.lastShift > 1000)
+        this.emulator = emulator;
+        let state = (emulator.memoryRead(GBPluginLink.LINKSTAT) & 0x80) == 0x80;
+        if(state == true && this.lastState == false)
         {
-            console.log("Reseting transfer.");
+            //console.log("Start of exchange");
+            this.send(emulator);
+            this.transfering = true;
+        }
+        else if(state == false && this.lastState == true)
+        {
+            //console.log("End of exchange");
             this.transfering = false;
         }
-        if(this.transfering == false)
-            this.initTransfer(emulator);
-        let bit = (this.inputBuffer & 0x80) >> 7;
-        this.buffer = ((this.buffer << 1) & 0xFE) | bit;
-        this.inputBuffer = this.inputBuffer << 1;
-        emulator.memoryWrite(GBPluginLink.LINKDATA, this.buffer);
-        console.log(this.buffer.toString(16)+" "+this.transferCounter+"/7");
-        this.transferCounter++;
-        this.lastShift = Date.now();
-        if(this.transferCounter >= 8)
-        {
-            this.endTransfer(emulator);
-        }
-    }
+        this.lastState = state;
 
-
-    public transfer(emulator : Emulator)
-    {
-
-        console.log("Sending "+emulator.memoryRead(GBPluginLink.LINKDATA).toString(16)+" as "+this.master);
+       /* console.log(emulator.memoryRead(GBPluginLink.LINKSTAT).toString(16));
+        console.log(emulator.memoryRead(GBPluginLink.LINKDATA).toString(16));*/
         
-        //TODO: faire la logique de l'envoi/reception
-        if(this.master == false)
+        /*if(emulator.serialTimer > this.lastState)
         {
-            this.receivedData = 0x01;
+            this.transfer(emulator);
         }
-        if(this.buffer == 0x01)
-        {
-            this.receivedData = 0x02;
-        }
-
-        console.log("Received "+this.receivedData.toString(16));
-    }
-
-    public initTransfer(emulator : Emulator) : void 
-    {
-        let data : number = emulator.memoryRead(GBPluginLink.LINKDATA);
-        this.buffer = data;
-
-        let role = "master";
-        if(this.master == false)
-            role = "slave";
-
-        this.transfer(emulator);        
-
-        this.inputBuffer = this.receivedData; 
-        this.transferCounter = 0; 
-        this.transfering = true;     
-    }
-
-    public endTransfer(emulator : Emulator) : void 
-    {
-        this.transfering = false;
-        console.log("Ending transfer with "+this.buffer.toString(16));
+        //let bit = (this.inputBuffer & 0x80) >> 7;
+        //emulator.memoryWrite(GBPluginLink.LINKDATA, (((emulator.memoryRead(GBPluginLink.LINKDATA) << 1) & 0xFE) | bit));
+        emulator.memoryWrite(GBPluginLink.LINKDATA, this.inputBuffer);
+        console.log(emulator.memoryRead(GBPluginLink.LINKDATA).toString(16));
+        this.lastState = emulator.serialTimer;*/
+        
     }
 
 }

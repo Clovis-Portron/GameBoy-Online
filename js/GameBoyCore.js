@@ -5768,7 +5768,6 @@ GameBoyCore.prototype.executeIteration = function () {
 			//IME is true and and interrupt was matched:
 			this.launchIRQ();
 		}
-		window.GBPluginScheduler.GetInstance().run(this);
 		//Fetch the current opcode:
 		opcodeToExecute = this.memoryReader[this.programCounter](this, this.programCounter);
 		//Increment the program counter to the next instruction:
@@ -5803,9 +5802,11 @@ GameBoyCore.prototype.executeIteration = function () {
 				}
 			}
 		}
+		window.GBPluginScheduler.GetInstance().run(this);
 		if (this.serialTimer > 0) {										//Serial Timing
 			//IRQ Counter:
 			this.serialTimer -= this.CPUTicks;
+			window.GBPluginScheduler.GetInstance().link(this);
 			if (this.serialTimer <= 0) {
 				this.interruptsRequested |= 0x8;
 				this.checkIRQMatching();
@@ -5814,7 +5815,6 @@ GameBoyCore.prototype.executeIteration = function () {
 			this.serialShiftTimer -= this.CPUTicks;
 			if (this.serialShiftTimer <= 0) {
 				this.serialShiftTimer = this.serialShiftTimerAllocated;
-				window.GBPluginScheduler.GetInstance().link(this);
 				//this.memory[0xFF01] = ((this.memory[0xFF01] << 1) & 0xFE) | 0x01;	//We could shift in actual link data here if we were to implement such!!!
 			}
 		}
@@ -5977,6 +5977,7 @@ GameBoyCore.prototype.updateCore = function () {
 	if (this.serialTimer > 0) {										//Serial Timing
 		//IRQ Counter:
 		this.serialTimer -= this.CPUTicks;
+		window.GBPluginScheduler.GetInstance().link(this);		
 		if (this.serialTimer <= 0) {
 			this.interruptsRequested |= 0x8;
 			this.checkIRQMatching();
@@ -5985,7 +5986,7 @@ GameBoyCore.prototype.updateCore = function () {
 		this.serialShiftTimer -= this.CPUTicks;
 		if (this.serialShiftTimer <= 0) {
 			this.serialShiftTimer = this.serialShiftTimerAllocated;
-			this.memory[0xFF01] = ((this.memory[0xFF01] << 1) & 0xFE) | 0x01;	//We could shift in actual link data here if we were to implement such!!!
+			//this.memory[0xFF01] = ((this.memory[0xFF01] << 1) & 0xFE) | 0x01;	//We could shift in actual link data here if we were to implement such!!!
 		}
 	}
 }
@@ -9124,7 +9125,7 @@ GameBoyCore.prototype.recompileModelSpecificIOWriteHandling = function () {
 			else {
 				//External clock:
 				parentObj.memory[0xFF02] = data;
-				parentObj.serialShiftTimer = parentObj.serialShiftTimerAllocated = parentObj.serialTimer = 0;	//Zero the timers, since we're emulating as if nothing is connected.
+				parentObj.serialShiftTimer = parentObj.serialShiftTimerAllocated = parentObj.serialTimer = 512;	//Zero the timers, since we're emulating as if nothing is connected.
 			}
 		}
 		this.memoryHighWriter[0x40] = this.memoryWriter[0xFF40] = function (parentObj, address, data) {
@@ -9310,7 +9311,7 @@ GameBoyCore.prototype.recompileModelSpecificIOWriteHandling = function () {
 			else {
 				//External clock:
 				parentObj.memory[0xFF02] = data;
-				parentObj.serialShiftTimer = parentObj.serialShiftTimerAllocated = parentObj.serialTimer = 0;	//Zero the timers, since we're emulating as if nothing is connected.
+				parentObj.serialShiftTimer = parentObj.serialShiftTimerAllocated = parentObj.serialTimer = 512;	//Zero the timers, since we're emulating as if nothing is connected.
 			}
 		}
 		this.memoryHighWriter[0x40] = this.memoryWriter[0xFF40] = function (parentObj, address, data) {
