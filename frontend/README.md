@@ -10,7 +10,7 @@ L'objectif de ce projet est de permettre l'extension d'un émulateur de gameboy 
 
 ## Link
 
-La branche Link contient le code du plugin permettant de réaliser des connexion par cable Link via le protocole WebRTC. Le plugin fonctionne sans problème dans le cadre d'une utilisation ne nécessitant pas un jeu en temps réel.
+La branche Link contient le code du plugin permettant de réaliser des connexions par cable Link via le protocole WebRTC. Le plugin fonctionne sans problème dans le cadre d'une utilisation ne nécessitant pas un jeu en temps réel.
 
 ## Multiplayer
 
