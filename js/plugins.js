@@ -203,14 +203,13 @@ window.Client = new GBPluginNetworkReceiver();
 class GBPluginLink extends GBPlugin {
     constructor() {
         super();
-        this.internal = null;
-        this.incoming = null;
-        this.transferCounter = 0;
         this.inputBuffer = null;
         this.outputBuffer = null;
         this.lastState = false;
         this.transfering = false;
         this.emulator = null;
+        this.timeout = null;
+        this.waitForCable = false;
         this.counterInterval = 0;
         let self = this;
         window.Server.registerCallback("LINK", function (e) {
@@ -220,17 +219,33 @@ class GBPluginLink extends GBPlugin {
             self.receive(e);
         });
     }
-    receive(e) {
-        //console.log("input buffer loaded with "+e.data.toString(16));
-        this.inputBuffer = e.data;
-        this.exchange();
+    cable() {
+        console.log("CABLE");
+        this.waitForCable = false;
     }
-    send(emulator) {
-        this.transferCounter++;
-        if (this.transferCounter < 2)
-            return;
-        this.outputBuffer = emulator.memoryRead(GBPluginLink.LINKDATA);
-        //console.log("Output buffer loaded with "+this.outputBuffer.toString(16));
+    cancel() {
+        console.log("TIMEOUT");
+        this.outputBuffer = null;
+        //this.inputBuffer = null;
+        this.emulator.memoryWrite(GBPluginLink.LINKDATA, 0xFF);
+        this.emulator.stopEmulator = 1;
+        this.emulator.CPUStopped = false;
+        this.waitForCable = true;
+        this.timeout = setTimeout(() => {
+            this.cable();
+        }, 5000);
+    }
+    receive(e) {
+        console.log("input buffer loaded with " + e.data.toString(16));
+        this.inputBuffer = e.data;
+        clearTimeout(this.timeout);
+        this.timeout = null;
+        this.cable();
+        this.swap();
+    }
+    send() {
+        this.outputBuffer = this.emulator.memoryRead(GBPluginLink.LINKDATA);
+        console.log("Output buffer loaded with " + this.outputBuffer.toString(16));
         window.Server.sendMessage({
             "type": "LINK",
             "data": this.outputBuffer
@@ -239,26 +254,35 @@ class GBPluginLink extends GBPlugin {
             "type": "LINK",
             "data": this.outputBuffer
         });
-        emulator.stopEmulator |= 2;
-        emulator.CPUStopped = true;
-        this.exchange();
+        this.emulator.stopEmulator |= 2;
+        this.emulator.CPUStopped = true;
+        this.timeout = setTimeout(() => {
+            this.cancel();
+        }, 5000);
+        this.swap();
     }
-    exchange() {
+    swap() {
         if (this.outputBuffer != null && this.inputBuffer != null) {
             this.emulator.memoryWrite(GBPluginLink.LINKDATA, this.inputBuffer);
             this.outputBuffer = null;
             this.inputBuffer = null;
-            //console.log("SWAP = "+this.emulator.memoryRead(GBPluginLink.LINKDATA).toString(16));
+            console.log("SWAP = " + this.emulator.memoryRead(GBPluginLink.LINKDATA).toString(16));
             this.emulator.stopEmulator = 1;
             this.emulator.CPUStopped = false;
+            clearTimeout(this.timeout);
+            this.timeout = null;
         }
     }
     link(emulator) {
         this.emulator = emulator;
         let state = (emulator.memoryRead(GBPluginLink.LINKSTAT) & 0x80) == 0x80;
         if (state == true && this.lastState == false) {
+            if (this.waitForCable) {
+                this.emulator.memoryWrite(GBPluginLink.LINKDATA, 0xFF);
+                return;
+            }
             //console.log("Start of exchange");
-            this.send(emulator);
+            this.send();
             this.transfering = true;
         }
         else if (state == false && this.lastState == true) {
