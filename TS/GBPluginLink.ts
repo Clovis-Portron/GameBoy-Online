@@ -31,13 +31,13 @@ class GBPluginLink extends GBPlugin
 
     private cable()
     {
-        console.log("CABLE");
+        //console.log("CABLE");
         this.waitForCable = false;
     }
 
     private cancel()
     {
-        console.log("TIMEOUT");
+        //console.log("TIMEOUT");
         this.outputBuffer = null;
         //this.inputBuffer = null;
         this.emulator.memoryWrite(GBPluginLink.LINKDATA, 0xFF);
@@ -51,7 +51,7 @@ class GBPluginLink extends GBPlugin
 
     private receive(e : Message)
     {
-        console.log("input buffer loaded with "+e.data.toString(16));
+        //console.log("input buffer loaded with "+e.data.toString(16));
         this.inputBuffer = e.data;
         clearTimeout(this.timeout);
         this.timeout = null;
@@ -62,7 +62,7 @@ class GBPluginLink extends GBPlugin
     private send()
     {
         this.outputBuffer = this.emulator.memoryRead(GBPluginLink.LINKDATA);
-        console.log("Output buffer loaded with "+this.outputBuffer.toString(16));
+        //console.log("Output buffer loaded with "+this.outputBuffer.toString(16));
         (<any>window).Server.sendMessage({
             "type" : "LINK", 
             "data" : this.outputBuffer
@@ -86,7 +86,7 @@ class GBPluginLink extends GBPlugin
             this.emulator.memoryWrite(GBPluginLink.LINKDATA, this.inputBuffer);
             this.outputBuffer = null;
             this.inputBuffer = null;
-            console.log("SWAP = "+this.emulator.memoryRead(GBPluginLink.LINKDATA).toString(16));
+            //console.log("SWAP = "+this.emulator.memoryRead(GBPluginLink.LINKDATA).toString(16));
             this.emulator.stopEmulator = 1;
             this.emulator.CPUStopped = false;   
             clearTimeout(this.timeout);
