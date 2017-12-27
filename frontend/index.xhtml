@@ -3,14 +3,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US">
     <head>
         <style type="text/css">@import url(&quot;css/GameBoy.css&quot;);</style>
+        <style type="text/css">@import url("css/Moddable.css");</style>
         <script type="text/javascript">
     var DEBUG_MESSAGES = false;
     var DEBUG_WINDOWING = false;
     window.onload = function () {
         windowingInitialize();
-		
-		//rajouté
-		startGame();
+		SaveManager.initializeSystem();
 	}
         </script>
         <script type="text/javascript" src="js/other/windowStack.js"/>
@@ -27,7 +26,6 @@
         <script type="text/javascript" src="js/romb64.js"/>
         <script type="text/javascript" src="js/q.js"/>
         <script type="text/javascript" src="js/LargeLocalStorage.js"/>
-        <script type="text/javascript" src="js/script.js"/>
         
 
         <script type="text/javascript" src="js/plugins.js"/>        
@@ -215,9 +213,24 @@
         </ul>
         <div id="fullscreenContainer">
             <canvas id="fullscreen" class="maximum"/>
+            <div id="moddable-gui">
+                <nav id="savemanager">
+                    <input id="save"  value="Save" onclick="SaveManager.save();" type="button"/>
+                    <input id="load"  value="Load" onclick="SaveManager.load();" type="button"/>
+                    <input id="save"  value="Save local" onclick="SaveManager.saveLocal();" type="button"/>
+                    <input id="save"  value="Load local" onchange="SaveManager.loadLocal(event);" type="file" accept=".rawsave" />
+                </nav>
+                <div id="more">
+                    <p>
+                        This is a GameBoy Color emulator written purely in JavaScript by Grant Galitz. - https://github.com/taisel/GameBoy-Online
+                    </p>
+                    <p>
+                        Current version is written in Typescript by Clovis Portron, in order to add various features.
+                    </p>
+                </div>
+            </div>
         </div>
-		
-		<input id="save"  value="SAVE" onclick="save();" type="button"/>
-		<input id="load"  value="LOAD" onclick="load();" type="button"/>
+        
+
     </body>
 </html>

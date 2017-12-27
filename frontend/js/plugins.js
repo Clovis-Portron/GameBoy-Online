@@ -220,11 +220,11 @@ class GBPluginLink extends GBPlugin {
         });
     }
     cable() {
-        console.log("CABLE");
+        //console.log("CABLE");
         this.waitForCable = false;
     }
     cancel() {
-        console.log("TIMEOUT");
+        //console.log("TIMEOUT");
         this.outputBuffer = null;
         //this.inputBuffer = null;
         this.emulator.memoryWrite(GBPluginLink.LINKDATA, 0xFF);
@@ -236,7 +236,7 @@ class GBPluginLink extends GBPlugin {
         }, 5000);
     }
     receive(e) {
-        console.log("input buffer loaded with " + e.data.toString(16));
+        //console.log("input buffer loaded with "+e.data.toString(16));
         this.inputBuffer = e.data;
         clearTimeout(this.timeout);
         this.timeout = null;
@@ -245,7 +245,7 @@ class GBPluginLink extends GBPlugin {
     }
     send() {
         this.outputBuffer = this.emulator.memoryRead(GBPluginLink.LINKDATA);
-        console.log("Output buffer loaded with " + this.outputBuffer.toString(16));
+        //console.log("Output buffer loaded with "+this.outputBuffer.toString(16));
         window.Server.sendMessage({
             "type": "LINK",
             "data": this.outputBuffer
@@ -266,7 +266,7 @@ class GBPluginLink extends GBPlugin {
             this.emulator.memoryWrite(GBPluginLink.LINKDATA, this.inputBuffer);
             this.outputBuffer = null;
             this.inputBuffer = null;
-            console.log("SWAP = " + this.emulator.memoryRead(GBPluginLink.LINKDATA).toString(16));
+            //console.log("SWAP = "+this.emulator.memoryRead(GBPluginLink.LINKDATA).toString(16));
             this.emulator.stopEmulator = 1;
             this.emulator.CPUStopped = false;
             clearTimeout(this.timeout);
@@ -308,5 +308,98 @@ GBPluginLink.LINKDATA = 0xFF01;
 GBPluginLink.EVENT = 0xFF0F;
 let link = new GBPluginLink();
 GBPluginScheduler.GetInstance().registerPluginLink(link);
+class SaveManager {
+    static initializeSystem() {
+        var desiredCapacity = 10 * 1024 * 1024;
+        window.storage = new window.LargeLocalStorage({ size: desiredCapacity, name: 'saves' });
+        window.storage.initialized.then(function (grantedCapacity) { });
+        window.start(window.fullscreenCanvas, window.base64_decode(window.romb641));
+        window.fullscreenPlayer();
+    }
+    static save() {
+        try {
+            var s1 = window.gameboy.saveState(), done = [false, false];
+            window.storage.setContents('pokemulti', JSON.stringify(s1)).then(function () {
+                done[0] = true;
+            });
+        }
+        catch (e) {
+            alert("Error when trying to save. Error message : \n" + e);
+        }
+    }
+    static load() {
+        try {
+            var saves = [], done = [false, false];
+            window.storage.getContents('pokemulti').then(function (s1) {
+                if (s1)
+                    saves[0] = JSON.parse(s1);
+                done[0] = true;
+                checkDone();
+            });
+            function checkDone() {
+                if (done[0] /*&& done[1]*/) {
+                    if (saves[0] /*&& saves[1]*/) {
+                        window.clearLastEmulation();
+                        window.gameboy = new window.GameBoyCore(window.fullscreenCanvas, "");
+                        if (!window.inFullscreen)
+                            window.fullscreenPlayer();
+                        window.gameboy.savedStateFileName = "SAVE STATE POKEMULTI";
+                        window.gameboy.returnFromState(saves[0]);
+                        window.run();
+                    }
+                }
+            }
+        }
+        catch (e) {
+            alert("Error when trying to load. Error message :\n " + e);
+        }
+    }
+    static saveLocal() {
+        try {
+            window.storage.getContents('pokemulti').then(function (s1) {
+                var element = document.createElement('a');
+                element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(s1));
+                element.setAttribute('download', "ModdableGB.rawsave");
+                element.style.display = 'none';
+                document.body.appendChild(element);
+                element.click();
+                document.body.removeChild(element);
+            });
+        }
+        catch (e) {
+            alert("Error when trying to save. Error message : \n" + e);
+        }
+    }
+    static loadLocal(ev) {
+        let input = ev.target;
+        if (input.files.length < 1)
+            return;
+        let file = input.files[0];
+        let reader = new FileReader();
+        reader.onload = function (e) {
+            var saves = [], done = [false, false];
+            let s1 = e.target.result;
+            if (s1)
+                saves[0] = JSON.parse(s1);
+            done[0] = true;
+            checkDone();
+            function checkDone() {
+                if (done[0] /*&& done[1]*/) {
+                    if (saves[0] /*&& saves[1]*/) {
+                        window.clearLastEmulation();
+                        window.gameboy = new window.GameBoyCore(window.fullscreenCanvas, "");
+                        if (!window.inFullscreen)
+                            window.fullscreenPlayer();
+                        window.gameboy.savedStateFileName = "SAVE STATE POKEMULTI";
+                        window.gameboy.returnFromState(saves[0]);
+                        window.run();
+                    }
+                }
+            }
+        };
+        reader.readAsText(file);
+    }
+}
+window.SaveManager = SaveManager;
 
 },{}]},{},[1]);
