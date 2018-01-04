@@ -1,8 +1,11 @@
 /// <reference path="GBPluginScheduler.ts" />
 /// <reference path="GBPluginNetwork.ts" />
+/// <reference path="OnlineManager.ts" />
+
 
 class GBPluginNetworkReceiver extends GBPluginNetwork
 {
+
     constructor()
     {
         super();
@@ -17,14 +20,15 @@ class GBPluginNetworkReceiver extends GBPluginNetwork
             this.connection.addIceCandidate(new RTCIceCandidate(candidates[i]));
         }
         console.log("window.Server.setCandidates(JSON.parse('" + JSON.stringify(this.iceCandidates).replace(/\\/g, "\\\\") + "'));")
-        
+        this.candidates = JSON.stringify(this.iceCandidates).replace(/\\/g, "\\\\");
     }
 
-    public receiveOffer(offerSdp) {
+    public receiveOffer(offerSdp) : Promise<any> {
     
         this.connection.setRemoteDescription(offerSdp);
-        this.connection.createAnswer().then((answer) => { 
+        return this.connection.createAnswer().then((answer) => { 
             this.connection.setLocalDescription(answer);
+            this.localDescription = JSON.stringify(answer).replace(/\\/g, "\\\\");
             console.log('window.Server.setRemoteDescription(new RTCSessionDescription(JSON.parse(\'' + JSON.stringify(answer).replace(/\\/g, "\\\\") + '\')));');
         }).catch(function(error){});
     }

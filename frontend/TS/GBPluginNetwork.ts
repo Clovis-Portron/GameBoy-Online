@@ -12,6 +12,8 @@ abstract class GBPluginNetwork extends GBPlugin
 
     private last_sign : string  = null;
 
+    public candidates : string = null;
+    public localDescription : string = null;
 
     constructor()
     {
