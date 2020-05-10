@@ -18,27 +18,6 @@ abstract class GBPluginNetwork extends GBPlugin
     constructor()
     {
         super();
-        this.callbacks = [];
-        this.messages = [];
-        this.counterInterval = 0;
-        this.iceCandidates = [];
-        this.connection = new RTCPeerConnection({
-           "iceServers": [
-                {
-                    urls: 'turn:numb.viagenie.ca',
-                    credential: '0662240307',
-                    username: 'chaipokoi@gmail.com'
-                },
-                {urls:'stun:stun.l.google.com:19302'},
-                {urls:'stun:stun1.l.google.com:19302'},
-                {urls:'stun:stun2.l.google.com:19302'},
-           ]
-        });
-    }
-
-    public registerCallback(type : string, fn : Function)
-    {
-        this.callbacks[type] = fn;
     }
 
     protected onOpen(e)
@@ -66,13 +45,6 @@ abstract class GBPluginNetwork extends GBPlugin
         let msg : Message = JSON.parse(e.data);
         if(this.callbacks[msg.type] != null)
             this.callbacks[msg.type](msg);
-    }
-
-    protected executeMessage(e) : boolean
-    {
-		if(this.emulator == null) return true;
-        
-        return true;
     }
 
     public sendMessage(e : Message) :  void 

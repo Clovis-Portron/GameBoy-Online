@@ -1,6 +1,4 @@
 /// <reference path="GBPluginScheduler.ts" />
-/// <reference path="GBPluginNetworkSender.ts" />
-/// <reference path="GBPluginNetworkReceiver.ts" />
 
 class GBPluginLink extends GBPlugin
 {
@@ -20,13 +18,13 @@ class GBPluginLink extends GBPlugin
     {
         super();
         this.counterInterval = 0;
-        let self = this;
+        /*let self = this;
         (<any>window).Server.registerCallback("LINK", function(e : Message){
             self.receive(e);
         });
         (<any>window).Client.registerCallback("LINK", function(e : Message){
             self.receive(e);
-        });
+        });*/
     }
 
     private cable()

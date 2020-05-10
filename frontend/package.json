@@ -7,7 +7,7 @@
     "test": "test"
   },
   "scripts": {
-    "build": "tsc --project TS && browserify js/plugins-temp.js -o js/plugins.js && del js\\plugins-temp.js && del js\\plugins-temp.js.map"
+    "build": "tsc --project TS && browserify js/plugins-temp.js -o js/plugins.js && rm js/plugins-temp.js && rm js/plugins-temp.js.map"
   },
   "repository": {
     "type": "git",
@@ -23,8 +23,5 @@
     "browserify": "^14.4.0",
     "typescript": "^2.5.2"
   },
-  "dependencies": {
-    "datachannel": "^1.0.0",
-    "firebase": "^4.3.1"
-  }
+  "dependencies": {}
 }
